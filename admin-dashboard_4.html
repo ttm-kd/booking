@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin — คลินิกแพทย์แผนไทยฯ รพ.ควนโดน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--pri:#5B6F4A;--pri-lt:#D4E4DF;--pri-dk:#3D4D31;--sage:#8BA9A0;--tan:#B5A08E;--forest:#5B6F4A;
+      --cream:#E8E4DA;--cream-lt:#F5F3EE;--gold:#E5B94E;--gold-lt:#FDF3D7;
+      --red:#C0392B;--orange:#B5651D;--blue:#4A708B;
+      --g50:#FAF9F7;--g100:#F3F1ED;--g200:#E5E2DB;--g300:#C8C4BB;--g400:#9C9890;--g500:#706C65;--g600:#524F49;--g700:#3A3835;--g800:#252422;
+      --r:14px;--rs:10px;--tr:.25s ease}
+    body{font-family:'Sarabun',sans-serif;background:var(--cream-lt);color:var(--g800);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+
+    /* HEADER */
+    .hdr{background:linear-gradient(135deg,var(--pri-dk),var(--forest) 60%,var(--sage) 200%);padding:16px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+    .hdr-left h1{font-size:16px;font-weight:700}.hdr-left p{font-size:12px;color:rgba(255,255,255,.6)}
+    .hdr-tag{background:var(--gold);color:var(--g800);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+    .hdr-date{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px}
+
+    /* TABS */
+    .tabs{display:flex;background:#fff;border-bottom:2px solid var(--g200);position:sticky;top:0;z-index:50}
+    .tab{flex:1;padding:12px 8px;text-align:center;font-size:14px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;transition:all var(--tr)}
+    .tab.on{color:var(--forest);border-bottom-color:var(--forest);background:var(--pri-lt)}
+    .tab .badge{display:inline-block;background:var(--red);color:#fff;font-size:10px;min-width:18px;height:18px;line-height:18px;border-radius:9px;margin-left:4px;padding:0 5px}
+
+    /* PANELS */
+    .panel{display:none;padding:16px}.panel.on{display:block}
+
+    /* STATS ROW */
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .stat{background:#fff;border-radius:var(--r);padding:12px;text-align:center;border:1px solid var(--g200)}
+    .stat-n{font-size:22px;font-weight:700}.stat-l{font-size:11px;color:var(--g500)}
+
+    /* QUEUE LIST */
+    .q-card{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:10px;border-left:4px solid var(--forest);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .q-card.walkin{border-left-color:var(--orange)}
+    .q-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .q-num{font-size:13px;font-weight:700;color:#fff;background:var(--forest);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .q-card.walkin .q-num{background:var(--orange)}
+    .q-time{font-size:13px;font-weight:700;color:var(--g800)}
+    .q-type{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+    .q-type.online{background:#DBEAFE;color:#1E40AF}.q-type.walk-in{background:#FFF7ED;color:#9A3412}
+    .q-body{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:var(--g600)}
+    .q-body b{color:var(--g800)}
+    .q-actions{display:flex;gap:6px;margin-top:8px}
+    .q-btn{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
+    .q-btn-cancel{background:#FEF2F2;color:var(--red)}.q-btn-view{background:var(--g100);color:var(--g600)}
+
+    /* WALK-IN FORM */
+    .wi-section{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid var(--g200)}
+    .wi-title{font-size:14px;font-weight:700;margin-bottom:10px;color:var(--g700)}
+    .fg{margin-bottom:10px}
+    .fl{display:block;font-size:12px;font-weight:600;color:var(--g600);margin-bottom:4px}
+    .fi{width:100%;padding:10px 12px;border:2px solid var(--g200);border-radius:var(--rs);font-size:14px;font-family:inherit;color:var(--g800);background:#fff}
+    .fi:focus{outline:none;border-color:var(--pri)}
+    select.fi{-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center}
+
+    /* SCHEDULE */
+    .sch-day{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--g200)}
+    .sch-date{font-size:14px;font-weight:700;color:var(--g800);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+    .sch-count{font-size:12px;font-weight:600;color:var(--forest);background:var(--pri-lt);padding:3px 12px;border-radius:10px}
+    .sch-staff{display:flex;flex-wrap:wrap;gap:6px}
+    .sch-chip{font-size:11px;padding:4px 10px;border-radius:16px;border:1px solid var(--g200);background:var(--g50);color:var(--g700);display:flex;align-items:center;gap:4px}
+    .sch-chip.doctor{background:var(--pri-lt);border-color:var(--sage);color:var(--pri-dk)}
+    .sch-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+    /* BUTTONS */
+    .btn{padding:14px 20px;border-radius:var(--rs);font-size:16px;font-weight:700;font-family:inherit;border:none;cursor:pointer;transition:all var(--tr);width:100%}
+    .btn:active{transform:scale(.97)}
+    .btn-p{background:var(--forest);color:#fff}.btn-p:disabled{background:var(--g300);cursor:not-allowed}
+    .btn-o{background:var(--orange);color:#fff}
+
+    /* LOADING / ERROR / EMPTY */
+    .ld{display:flex;flex-direction:column;align-items:center;padding:40px;color:var(--g400);font-size:13px}
+    .sp{width:30px;height:30px;border:3px solid var(--g200);border-top-color:var(--forest);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .err{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--rs);padding:12px;color:var(--red);font-size:13px;margin:12px 0}
+    .empty{text-align:center;padding:24px;color:var(--g400);font-size:13px}
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g800);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;z-index:200;animation:fadeUp .3s ease}
+    @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    .hidden{display:none!important}
+
+    /* MODAL */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+    .modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:20px}
+    .modal-t{font-size:16px;font-weight:700;margin-bottom:12px}
+    .modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--g400);padding:4px}
+    .scr-row{padding:8px 0;border-bottom:1px solid var(--g100);font-size:13px}
+    .scr-q{color:var(--g500);font-size:11px}.scr-a{font-weight:600;color:var(--g800)}
+  </style>
+</head>
+<body>
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>🌿 คลินิกแพทย์แผนไทยและแพทย์ทางเลือก</h1>
+      <p>โรงพยาบาลควนโดน จ.สตูล</p>
+      <div class="hdr-date" id="hdrDate"></div>
+    </div>
+    <div class="hdr-tag">ADMIN</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" data-t="queue" onclick="switchTab('queue')">📋 ดูคิว <span class="badge" id="qBadge">0</span></div>
+    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหา</div>
+    <div class="tab" data-t="walkin" onclick="switchTab('walkin')">🚶 Walk-in</div>
+    <div class="tab" data-t="schedule" onclick="switchTab('schedule')">📅 ตารางเวร</div>
+  </div>
+
+  <!-- ===== PANEL: คิว ===== -->
+  <div class="panel on" id="pQueue">
+    <!-- Date selector -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <button onclick="changeQueueDate(-1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">←</button>
+      <div style="flex:1;text-align:center">
+        <input type="date" class="fi" id="queueDate" onchange="loadQueue()" style="text-align:center;font-size:13px;padding:8px;font-weight:600">
+      </div>
+      <button onclick="changeQueueDate(1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">→</button>
+      <button onclick="goToday()" style="padding:8px 12px;border-radius:var(--rs);background:var(--pri);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">วันนี้</button>
+    </div>
+    <div style="text-align:center;font-size:13px;color:var(--g500);margin-bottom:12px" id="queueDateLabel"></div>
+
+    <div class="stats" id="statsRow">
+      <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
+      <div class="stat"><div class="stat-n" id="stOnline" style="color:var(--blue)">-</div><div class="stat-l">จองออนไลน์</div></div>
+      <div class="stat"><div class="stat-n" id="stWalkin" style="color:var(--orange)">-</div><div class="stat-l">Walk-in</div></div>
+    </div>
+    <!-- Provider filter -->
+    <div style="margin-bottom:12px">
+      <select class="fi" id="provFilter" onchange="filterQueue()" style="font-size:13px;padding:8px 12px">
+        <option value="all">👥 ผู้ให้บริการทั้งหมด</option>
+      </select>
+    </div>
+    <div id="queueList"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
+  </div>
+
+  <!-- ===== PANEL: ค้นหาผู้ป่วย ===== -->
+  <div class="panel" id="pSearch">
+    <div style="background:#fff;border-radius:var(--r);padding:16px;border:1px solid var(--g200);margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--g700)">🔍 ค้นหาผู้ป่วย</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" class="fi" id="searchInput" placeholder="พิมพ์ชื่อ, HN หรือรหัสจอง..." style="flex:1" onkeydown="if(event.key==='Enter')doSearch()">
+        <button onclick="doSearch()" style="padding:10px 20px;border-radius:var(--rs);background:var(--pri);color:#fff;border:none;font-family:inherit;font-weight:700;cursor:pointer;white-space:nowrap">ค้นหา</button>
+      </div>
+      <div style="font-size:11px;color:var(--g400);margin-top:6px">ค้นหาได้จาก: ชื่อ-สกุล, เลข HN, รหัสการจอง (BK-...)</div>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+
+  <!-- ===== PANEL: Walk-in ===== -->
+  <div class="panel" id="pWalkin">
+    <div class="wi-section">
+      <div class="wi-title">🚶 เพิ่มคิว Walk-in</div>
+      <div class="fg"><label class="fl">ประเภทบริการ *</label>
+        <select class="fi" id="wiSvc"><option value="">-- เลือกบริการ --</option></select></div>
+      <div class="fg"><label class="fl">ผู้ให้บริการ *</label>
+        <select class="fi" id="wiProv"><option value="">-- เลือกผู้ให้บริการ --</option></select></div>
+      <div class="fg"><label class="fl">Slot เวลา *</label>
+        <select class="fi" id="wiSlot"><option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option></select></div>
+      <div class="fg"><label class="fl">ชื่อ-สกุลผู้ป่วย *</label>
+        <input type="text" class="fi" id="wiName" placeholder="กรอกชื่อ-สกุล"></div>
+      <div class="fg"><label class="fl">HN</label>
+        <input type="text" class="fi" id="wiHn" placeholder="กรอก HN (ถ้ามี)"></div>
+      <div class="fg"><label class="fl">เบอร์โทร</label>
+        <input type="tel" class="fi" id="wiPhone" placeholder="0xx-xxx-xxxx"></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label>
+        <input type="text" class="fi" id="wiNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
+      <div id="wiErr" class="err hidden"></div>
+      <button class="btn btn-o" id="wiBtn" onclick="submitWalkin()">🚶 เพิ่ม Walk-in</button>
+    </div>
+  </div>
+
+  <!-- ===== PANEL: ตารางเวร ===== -->
+  <div class="panel" id="pSchedule">
+    <div id="schList"><div class="ld"><div class="sp"></div>กำลังโหลดตารางเวร...</div></div>
+  </div>
+
+  <!-- MODAL: ดูรายละเอียด -->
+  <div class="modal-bg hidden" id="modal" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="document.getElementById('modal').classList.add('hidden')">&times;</button>
+      <div class="modal-t" id="modalTitle">รายละเอียดการจอง</div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbz-Bnd0M36cHSR_PFKYA40VL-RwupEYToRwLGAcws0brAUtn32WZDJiQQAsj_H8P1zcVQ/exec';
+
+let todayStr = '';
+let allBookings = [];
+let todayProviders = [];
+let services = [];
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet(action, p={}) {
+  const u = new URL(API); u.searchParams.set('action', action);
+  Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));
+  return (await fetch(u)).json();
+}
+async function apiPost(body) {
+  return (await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})).json();
+}
+function safeTime(v){
+  if(!v)return'00:00';const s=String(v);
+  if(s.includes('T')){try{const d=new Date(s);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')}catch(e){}}
+  return s;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+let selectedQueueDate = '';
+
+async function init() {
+  const now = new Date();
+  todayStr = now.toISOString().slice(0, 10);
+  selectedQueueDate = todayStr;
+
+  // Set date picker to today
+  document.getElementById('queueDate').value = todayStr;
+  updateQueueDateLabel();
+
+  // Thai date for header
+  const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('hdrDate').textContent =
+    `วัน${dn[now.getDay()]}ที่ ${now.getDate()} ${mn[now.getMonth()]} ${now.getFullYear()+543}`;
+
+  // Load services
+  try {
+    const svcR = await apiGet('getServiceTypes');
+    if (svcR.success) {
+      services = svcR.services;
+      const sel = document.getElementById('wiSvc');
+      services.forEach(s => {
+        sel.innerHTML += `<option value="${s.id}">${s.icon} ${s.name} (${s.duration})</option>`;
+      });
+    }
+  } catch(e) { console.error(e); }
+
+  loadQueue();
+  loadSchedule();
+}
+
+function formatThaiDate(dateStr) {
+  const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const d = new Date(dateStr);
+  return `วัน${dn[d.getDay()]}ที่ ${d.getDate()} ${mn[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+function updateQueueDateLabel() {
+  const dateStr = document.getElementById('queueDate').value;
+  selectedQueueDate = dateStr;
+  const label = document.getElementById('queueDateLabel');
+  const isToday = dateStr === todayStr;
+  label.innerHTML = isToday
+    ? `📌 <b style="color:var(--pri)">วันนี้</b> · ${formatThaiDate(dateStr)}`
+    : `📅 ${formatThaiDate(dateStr)}`;
+}
+
+function changeQueueDate(offset) {
+  const input = document.getElementById('queueDate');
+  const d = new Date(input.value);
+  d.setDate(d.getDate() + offset);
+  input.value = d.toISOString().slice(0, 10);
+  updateQueueDateLabel();
+  loadQueue();
+}
+
+function goToday() {
+  document.getElementById('queueDate').value = todayStr;
+  updateQueueDateLabel();
+  loadQueue();
+}
+
+// ============================================================
+// TAB: คิว (รองรับเลือกวัน)
+// ============================================================
+async function loadQueue() {
+  const dateStr = document.getElementById('queueDate').value || todayStr;
+  selectedQueueDate = dateStr;
+  updateQueueDateLabel();
+
+  const list = document.getElementById('queueList');
+  list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+
+  try {
+    // Load bookings for selected date
+    const res = await apiGet('getBookings', { date: dateStr });
+    if (!res.success) { list.innerHTML = '<div class="err">'+res.error+'</div>'; return; }
+    allBookings = res.bookings || [];
+
+    // Load providers for selected date
+    const provR = await apiGet('getScheduledProviders', { date: dateStr, service_type: 'massage_1hr' });
+    if (provR.success) {
+      todayProviders = provR.providers;
+      const filter = document.getElementById('provFilter');
+      filter.innerHTML = '<option value="all">👥 ผู้ให้บริการทั้งหมด</option>';
+      todayProviders.forEach(p => {
+        filter.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+    }
+
+    renderQueue(allBookings);
+  } catch(e) {
+    list.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>';
+  }
+}
+
+function filterQueue() {
+  const val = document.getElementById('provFilter').value;
+  const filtered = val === 'all' ? allBookings : allBookings.filter(b => b.provider_id === val);
+  renderQueue(filtered);
+}
+
+function renderQueue(bookings) {
+  const list = document.getElementById('queueList');
+
+  // Stats
+  const total = bookings.length;
+  const online = bookings.filter(b => b.booking_type === 'online' || b.booking_type === 'reschedule').length;
+  const walkin = bookings.filter(b => b.booking_type === 'walk-in').length;
+  document.getElementById('stTotal').textContent = total;
+  document.getElementById('stOnline').textContent = online;
+  document.getElementById('stWalkin').textContent = walkin;
+  document.getElementById('qBadge').textContent = total;
+
+  if (total === 0) {
+    list.innerHTML = '<div class="empty">📭 ยังไม่มีคิววันนี้</div>';
+    return;
+  }
+
+  // Sort by time
+  bookings.sort((a,b) => safeTime(a.time_start).localeCompare(safeTime(b.time_start)));
+
+  list.innerHTML = bookings.map((b, i) => {
+    const isWalkin = b.booking_type === 'walk-in';
+    const typeClass = isWalkin ? 'walk-in' : 'online';
+    const typeLabel = isWalkin ? 'Walk-in' : 'ออนไลน์';
+    return `<div class="q-card${isWalkin?' walkin':''}">
+      <div class="q-head">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="q-num">${i+1}</div>
+          <div class="q-time">${safeTime(b.time_start)} – ${safeTime(b.time_end)}</div>
+        </div>
+        <span class="q-type ${typeClass}">${typeLabel}</span>
+      </div>
+      <div class="q-body">
+        <div>👤 <b>${b.patient_name||'-'}</b></div>
+        <div>🏷️ ${b.patient_hn||'-'}</div>
+        <div>👨‍⚕️ ${b.provider_name||'-'}</div>
+        <div>💆 ${b.service_name||'-'}</div>
+      </div>
+      <div class="q-actions">
+        <button class="q-btn q-btn-view" onclick="viewBooking('${b.booking_id}')">👁️ ดูรายละเอียด</button>
+        <button class="q-btn q-btn-cancel" onclick="cancelBooking('${b.booking_id}')">❌ ยกเลิก</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function viewBooking(bid) {
+  const b = allBookings.find(x => x.booking_id === bid);
+  if (!b) return;
+  document.getElementById('modalTitle').textContent = `📋 ${b.booking_id}`;
+
+  let html = `
+    <div class="scr-row"><span class="scr-q">ชื่อผู้ป่วย</span><div class="scr-a">${b.patient_name||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">HN</span><div class="scr-a">${b.patient_hn||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">เวลา</span><div class="scr-a">${safeTime(b.time_start)} – ${safeTime(b.time_end)}</div></div>
+    <div class="scr-row"><span class="scr-q">ผู้ให้บริการ</span><div class="scr-a">${b.provider_name||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">บริการ</span><div class="scr-a">${b.service_name||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">ประเภทการจอง</span><div class="scr-a">${b.booking_type||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">สถานะ</span><div class="scr-a">${b.status||'-'}</div></div>
+  `;
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'modal') document.getElementById('modal').classList.add('hidden');
+}
+
+async function cancelBooking(bid) {
+  if (!confirm(`ยืนยันยกเลิกการจอง ${bid}?`)) return;
+  try {
+    const res = await apiPost({ action: 'cancel', booking_id: bid, reason: 'เจ้าหน้าที่ยกเลิก' });
+    if (res.success) {
+      showToast('✅ ยกเลิกเรียบร้อย');
+      loadQueue();
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + res.error);
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ============================================================
+// TAB: Walk-in
+// ============================================================
+document.getElementById('wiSvc').addEventListener('change', loadWalkinProviders);
+document.getElementById('wiProv').addEventListener('change', loadWalkinSlots);
+
+async function loadWalkinProviders() {
+  const svcId = document.getElementById('wiSvc').value;
+  const provSel = document.getElementById('wiProv');
+  const slotSel = document.getElementById('wiSlot');
+  provSel.innerHTML = '<option value="">-- เลือกผู้ให้บริการ --</option>';
+  slotSel.innerHTML = '<option value="">-- เลือกผู้ให้บริการก่อน --</option>';
+
+  if (!svcId) return;
+
+  try {
+    const res = await apiGet('getScheduledProviders', { date: todayStr, service_type: svcId });
+    if (res.success && res.providers) {
+      res.providers.forEach(p => {
+        provSel.innerHTML += `<option value="${p.id}">${p.name} (${p.title})</option>`;
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function loadWalkinSlots() {
+  const svcId = document.getElementById('wiSvc').value;
+  const provId = document.getElementById('wiProv').value;
+  const slotSel = document.getElementById('wiSlot');
+  slotSel.innerHTML = '<option value="">กำลังโหลด...</option>';
+
+  if (!svcId || !provId) {
+    slotSel.innerHTML = '<option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option>';
+    return;
+  }
+
+  try {
+    const res = await apiGet('getSlots', { date: todayStr, provider_id: provId, service_type: svcId });
+    if (res.success && res.available) {
+      slotSel.innerHTML = '<option value="">-- เลือกเวลา --</option>';
+      if (res.available.length === 0) {
+        slotSel.innerHTML = '<option value="">❌ ไม่มี slot ว่าง</option>';
+        return;
+      }
+      res.available.forEach(s => {
+        slotSel.innerHTML += `<option value="${s.slot_index}">${safeTime(s.time_start)} – ${safeTime(s.time_end)} (${s.period})</option>`;
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function submitWalkin() {
+  const svcId = document.getElementById('wiSvc').value;
+  const provId = document.getElementById('wiProv').value;
+  const slotIdx = document.getElementById('wiSlot').value;
+  const name = document.getElementById('wiName').value.trim();
+  const hn = document.getElementById('wiHn').value.trim();
+  const phone = document.getElementById('wiPhone').value.trim();
+  const note = document.getElementById('wiNote').value.trim();
+  const errEl = document.getElementById('wiErr');
+
+  if (!svcId) { errEl.textContent='เลือกประเภทบริการ'; errEl.classList.remove('hidden'); return; }
+  if (!provId) { errEl.textContent='เลือกผู้ให้บริการ'; errEl.classList.remove('hidden'); return; }
+  if (!slotIdx) { errEl.textContent='เลือกเวลา'; errEl.classList.remove('hidden'); return; }
+  if (!name) { errEl.textContent='กรอกชื่อผู้ป่วย'; errEl.classList.remove('hidden'); return; }
+  errEl.classList.add('hidden');
+
+  const btn = document.getElementById('wiBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+  try {
+    const res = await apiPost({
+      action: 'walkin',
+      provider_id: provId,
+      slot_index: parseInt(slotIdx),
+      service_type: svcId,
+      patient_name: name,
+      patient_hn: hn,
+      patient_phone: phone,
+      notes: note,
+    });
+
+    if (res.success) {
+      showToast(`✅ เพิ่ม walk-in สำเร็จ: ${res.booking_id}`);
+      // Reset form
+      document.getElementById('wiSvc').value = '';
+      document.getElementById('wiProv').innerHTML = '<option value="">-- เลือกผู้ให้บริการ --</option>';
+      document.getElementById('wiSlot').innerHTML = '<option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option>';
+      document.getElementById('wiName').value = '';
+      document.getElementById('wiHn').value = '';
+      document.getElementById('wiPhone').value = '';
+      document.getElementById('wiNote').value = '';
+      // Refresh queue
+      loadQueue();
+      switchTab('queue');
+    } else {
+      errEl.textContent = res.error || 'เกิดข้อผิดพลาด';
+      errEl.classList.remove('hidden');
+    }
+  } catch(e) {
+    errEl.textContent = 'Error: ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+
+  btn.disabled = false; btn.textContent = '🚶 เพิ่ม Walk-in';
+}
+
+// ============================================================
+// TAB: ตารางเวร
+// ============================================================
+async function loadSchedule() {
+  const list = document.getElementById('schList');
+  list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดตารางเวร...</div>';
+
+  try {
+    const res = await apiGet('getDates');
+    if (!res.success) { list.innerHTML = '<div class="err">'+res.error+'</div>'; return; }
+
+    const dates = res.dates || [];
+    let html = '';
+
+    for (const d of dates) {
+      // Load providers for each date
+      let provHtml = '';
+      try {
+        const pRes = await apiGet('getScheduledProviders', { date: d.date, service_type: 'massage_1hr' });
+        if (pRes.success && pRes.providers) {
+          provHtml = pRes.providers.map(p => {
+            const isDoc = p.title && p.title.includes('แพทย์แผนไทย') && !p.title.includes('ผู้ช่วย');
+            const shifts = p.shift ? p.shift.split(',').map(s=>s.trim()).join(' · ') : '';
+            return `<div class="sch-chip${isDoc?' doctor':''}">
+              <div class="sch-dot" style="background:${p.color||'#94A3B8'}"></div>
+              ${p.name} <span style="font-size:9px;color:var(--g400)">(${shifts})</span>
+            </div>`;
+          }).join('');
+        }
+      } catch(e) {}
+
+      const isToday = d.date === todayStr;
+      html += `<div class="sch-day" ${isToday?'style="border-color:var(--pri);border-width:2px"':''}>
+        <div class="sch-date">
+          <span>${isToday?'📌 ':'' }${d.label}</span>
+          <span class="sch-count">${d.staff_count} คน</span>
+        </div>
+        <div class="sch-staff">${provHtml || '<span style="color:var(--g400);font-size:12px">ยังไม่มีตารางเวร</span>'}</div>
+      </div>`;
+    }
+
+    list.innerHTML = html;
+  } catch(e) {
+    list.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>';
+  }
+}
+
+// ============================================================
+// TAB: ค้นหาผู้ป่วย
+// ============================================================
+async function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  const box = document.getElementById('searchResults');
+
+  if (!q || q.length < 2) {
+    box.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g400);font-size:13px">พิมพ์อย่างน้อย 2 ตัวอักษร</div>';
+    return;
+  }
+
+  box.innerHTML = '<div class="ld"><div class="sp"></div>กำลังค้นหา...</div>';
+
+  try {
+    const res = await apiGet('searchPatient', { q: q });
+    if (!res.success) { box.innerHTML = '<div class="err">'+res.error+'</div>'; return; }
+
+    const bookings = res.bookings || [];
+    if (bookings.length === 0) {
+      box.innerHTML = '<div class="empty">🔍 ไม่พบผลลัพธ์สำหรับ "'+q+'"</div>';
+      return;
+    }
+
+    box.innerHTML = `<div style="font-size:12px;color:var(--g500);margin-bottom:10px">พบ ${bookings.length} รายการ</div>` +
+      bookings.map(b => {
+        const statusColors = { confirmed: '#0D9488', cancelled: '#DC2626', 'walk-in': '#EA580C' };
+        const statusLabels = { confirmed: '✅ ยืนยัน', cancelled: '❌ ยกเลิก' };
+        const stColor = statusColors[b.status] || '#64748B';
+        const stLabel = statusLabels[b.status] || b.status;
+        const typeLabel = b.booking_type === 'walk-in' ? '🚶 Walk-in' : '📱 ออนไลน์';
+
+        return `<div style="background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;border:1px solid var(--g200);border-left:4px solid ${stColor}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:700;color:var(--g800)">${b.booking_id}</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;background:${stColor}18;color:${stColor}">${stLabel}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:var(--g600)">
+            <div>👤 <b>${b.patient_name||'-'}</b></div>
+            <div>🏷️ HN: ${b.patient_hn||'-'}</div>
+            <div>📅 ${b.date_thai||b.date}</div>
+            <div>🕐 ${safeTime(b.time_start)} – ${safeTime(b.time_end)}</div>
+            <div>👨‍⚕️ ${b.provider_name||'-'}</div>
+            <div>💆 ${b.service_name||'-'}</div>
+            <div>📋 ${typeLabel}</div>
+            <div>📞 ${b.patient_phone||'-'}</div>
+          </div>
+          ${b.notes ? '<div style="margin-top:6px;font-size:11px;color:var(--g500);background:var(--g50);padding:6px 10px;border-radius:6px">📝 '+b.notes+'</div>' : ''}
+          ${b.status==='confirmed' ? '<div style="margin-top:8px"><button class="q-btn q-btn-cancel" onclick="cancelFromSearch(\''+b.booking_id+'\')">❌ ยกเลิกนัดนี้</button></div>' : ''}
+        </div>`;
+      }).join('');
+
+  } catch(e) {
+    box.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>';
+  }
+}
+
+async function cancelFromSearch(bid) {
+  if (!confirm(`ยืนยันยกเลิกการจอง ${bid}?`)) return;
+  try {
+    const res = await apiPost({ action: 'cancel', booking_id: bid, reason: 'เจ้าหน้าที่ยกเลิก' });
+    if (res.success) { showToast('✅ ยกเลิกเรียบร้อย'); doSearch(); }
+    else alert('เกิดข้อผิดพลาด: ' + res.error);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.dataset.t === t));
+  ['Queue','Search','Walkin','Schedule'].forEach(p => {
+    const el = document.getElementById('p'+p);
+    if(el) el.classList.toggle('on', p.toLowerCase() === t);
+  });
+  if (t === 'queue') loadQueue();
+  if (t === 'search') { document.getElementById('searchInput').focus(); }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
