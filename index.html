@@ -212,7 +212,7 @@
   <!-- STEP 3 -->
   <div class="sec" id="s3">
     <div class="sec-t">เลือกวันที่</div>
-    <div class="sec-s">เลื่อนซ้าย-ขวาเพื่อเลือกวัน (จองล่วงหน้าได้ 7 วัน)</div>
+    <div class="sec-s">เลื่อนซ้าย-ขวาเพื่อเลือกวัน (จองล่วงหน้าได้ 7 วันทำการ ไม่รวมวันหยุด)</div>
     <div class="d-scroll" id="dateScroll"></div>
     <div id="dateDisplay" style="font-size:14px;color:var(--g500);text-align:center;margin-top:12px"></div>
   </div>
@@ -302,7 +302,7 @@ function pickCh(qid,val,el){el.parentElement.querySelectorAll('.q-ch').forEach(c
 function renderDates(){
   const dn=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'],mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const todayS=new Date().toISOString().slice(0,10);
-  document.getElementById('dateScroll').innerHTML=S.dates.map(d=>{
+  document.getElementById('dateScroll').innerHTML=S.dates.filter(d=>d.staff_count>0&&d.available).map(d=>{
     const dt=new Date(d.date),isT=d.date===todayS,off=!d.available;
     return`<div class="d-card${isT?' today':''}${off?' off':''}" data-d="${d.date}" onclick="pickDate('${d.date}')"><div class="dn">${isT?'วันนี้':dn[dt.getDay()]}</div><div class="dd">${dt.getDate()}</div><div class="dm">${mn[dt.getMonth()]}</div><div class="sc">${d.staff_count} คน</div></div>`;
   }).join('');
