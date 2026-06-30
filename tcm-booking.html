@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>จองคิวแพทย์แผนจีน — รพ.ควนโดน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--pri:#8B4513;--pri-dk:#5C2E0A;--pri-lt:#F5E6D3;--accent:#C41E3A;--accent-lt:#FDE8EC;
+      --cream:#FAF5EF;--cream-lt:#FFFBF7;--gold:#D4A017;--gold-lt:#FFF8E1;
+      --white:#FFF;--red:#C0392B;
+      --g50:#FAF9F7;--g100:#F3F1ED;--g200:#E5E2DB;--g300:#C8C4BB;--g400:#9C9890;--g500:#706C65;--g600:#524F49;--g700:#3A3835;--g800:#252422;
+      --r:14px;--rs:10px;--tr:.25s ease}
+    body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--g800);line-height:1.6;font-size:16px;min-height:100vh}
+    .hdr{background:linear-gradient(160deg,var(--pri-dk),var(--pri));padding:18px 20px;color:var(--white)}
+    .hdr-top{display:flex;align-items:center;gap:12px}
+    .hdr-logo{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:24px}
+    .hdr h1{font-size:16px;font-weight:700;line-height:1.3}.hdr p{font-size:12px;color:rgba(255,255,255,.6)}
+    .hdr-badge{display:inline-block;background:var(--gold);color:var(--g800);font-size:11px;font-weight:700;padding:3px 12px;border-radius:12px;margin-top:6px}
+    .wrap{max-width:500px;margin:0 auto;padding:16px}
+    .dots{display:flex;justify-content:center;gap:8px;padding:14px 0}
+    .dot{width:36px;height:5px;border-radius:3px;background:var(--g200);transition:all var(--tr)}
+    .dot.on{background:var(--pri);width:48px}.dot.ok{background:var(--gold)}
+    .sec{display:none;animation:fadeIn .3s}.sec.on{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .sec-t{font-size:20px;font-weight:800;color:var(--g800);margin-bottom:4px}
+    .sec-s{font-size:14px;color:var(--g500);margin-bottom:16px}
+    .svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .svc{background:var(--white);border:2px solid var(--g200);border-radius:var(--r);padding:18px 14px;cursor:pointer;text-align:center;transition:all var(--tr)}
+    .svc:active{transform:scale(.97)}.svc.sel{border-color:var(--pri);background:var(--pri-lt)}
+    .svc .ic{font-size:28px;margin-bottom:6px}.svc .nm{font-size:15px;font-weight:700}.svc .dr{font-size:12px;color:var(--g400)}
+    .d-scroll{display:flex;gap:8px;overflow-x:auto;padding:4px 0;scroll-snap-type:x mandatory}
+    .d-card{min-width:80px;background:var(--white);border:2px solid var(--g200);border-radius:var(--r);padding:12px 8px;text-align:center;cursor:pointer;scroll-snap-align:start;transition:all var(--tr);flex-shrink:0}
+    .d-card:active{transform:scale(.97)}.d-card.sel{border-color:var(--pri);background:var(--pri-lt)}
+    .d-card.dis{opacity:.4;pointer-events:none}
+    .d-card .dn{font-size:11px;color:var(--g400)}.d-card .dd{font-size:24px;font-weight:800}.d-card .dm{font-size:11px;color:var(--g500)}.d-card .dc{font-size:11px;color:var(--pri);font-weight:600;margin-top:4px}
+    .t-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .t-slot{background:var(--white);border:2px solid var(--g200);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all var(--tr)}
+    .t-slot:active{transform:scale(.97)}.t-slot.sel{border-color:var(--pri);background:var(--pri-lt)}
+    .t-slot.full{opacity:.4;pointer-events:none;background:var(--g100)}
+    .t-slot .ts{font-size:14px;font-weight:700}.t-slot .tp{font-size:11px;color:var(--g400)}
+    .t-slot .tr{font-size:12px;color:var(--pri);font-weight:600;margin-top:4px}
+    .t-slot.full .tr{color:var(--red)}
+    .fg{margin-bottom:14px}.fl{display:block;font-size:14px;font-weight:600;margin-bottom:4px;color:var(--g700)}
+    .fi{width:100%;padding:14px;border:2px solid var(--g200);border-radius:var(--rs);font-size:16px;font-family:inherit;color:var(--g800);background:var(--white)}
+    .fi:focus{outline:none;border-color:var(--pri)}
+    .fn{font-size:12px;color:var(--g400);margin-top:4px}
+    .req{color:var(--red)}
+    .ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .ins-opt{background:var(--white);border:2px solid var(--g200);border-radius:var(--rs);padding:12px;cursor:pointer;text-align:center;transition:all var(--tr);font-size:14px;font-weight:600}
+    .ins-opt:active{transform:scale(.97)}.ins-opt.sel{border-color:var(--pri);background:var(--pri-lt)}
+    .ins-opt .ins-ic{font-size:20px;margin-bottom:2px}
+    .scr-q{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:14px;margin-bottom:10px}
+    .scr-q label{font-size:14px;font-weight:600;display:block;margin-bottom:6px}
+    .scr-opts{display:flex;gap:8px;margin-top:6px}
+    .scr-opt{flex:1;padding:10px;border:2px solid var(--g200);border-radius:var(--rs);text-align:center;cursor:pointer;font-size:14px;font-weight:600;transition:all var(--tr)}
+    .scr-opt.sel{border-color:var(--pri);background:var(--pri-lt)}
+    .sum{background:var(--white);border:1px solid var(--g200);border-radius:var(--r);padding:16px;margin-bottom:14px}
+    .sum-h{font-size:15px;font-weight:700;margin-bottom:10px;color:var(--pri)}
+    .sum-r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g100);font-size:14px}
+    .sum-r:last-child{border:none}.sum-l{color:var(--g400)}.sum-v{font-weight:600}
+    .err{background:var(--accent-lt);border:1px solid var(--accent);border-radius:var(--rs);padding:12px;color:var(--accent);font-size:14px;margin-top:10px}
+    .hidden{display:none!important}
+    .bbar{position:sticky;bottom:0;background:var(--cream);border-top:1px solid var(--g200);padding:12px 16px;display:flex;gap:10px;z-index:10}
+    .btn{flex:1;padding:16px;border-radius:var(--r);font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all var(--tr)}
+    .btn:active{transform:scale(.98)}.btn:disabled{opacity:.4;pointer-events:none}
+    .btn-p{background:var(--pri);color:var(--white)}.btn-o{background:var(--g100);color:var(--g600)}
+    .btn-ok{background:var(--gold);color:var(--g800)}
+    .ok-box{text-align:center;padding:20px}.ok-ic{font-size:60px;margin-bottom:12px}
+    .ok-box h2{font-size:20px;font-weight:800;color:var(--pri);margin-bottom:6px}
+    .ok-bid{font-size:14px;color:var(--g400);margin-bottom:16px;word-break:break-all}
+    .ld{display:flex;flex-direction:column;align-items:center;padding:30px;color:var(--g400)}
+    .sp{width:28px;height:28px;border:3px solid var(--g200);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-logo">🏥</div>
+      <div><h1>คลินิกแพทย์แผนจีน</h1><p>โรงพยาบาลควนโดน จ.สตูล</p></div>
+    </div>
+    <div class="hdr-badge">🏥 จองคิวออนไลน์</div>
+  </div>
+  <div class="dots"><div class="dot on" data-s="1"></div><div class="dot" data-s="2"></div><div class="dot" data-s="3"></div><div class="dot" data-s="4"></div><div class="dot" data-s="5"></div></div>
+  <div class="wrap">
+  <!-- STEP 1: เลือกบริการ -->
+  <div class="sec on" id="s1">
+    <div class="sec-t">เลือกบริการ</div>
+    <div class="sec-s">เลือกประเภทบริการที่ต้องการรับ</div>
+    <div class="svc-grid" id="svcGrid"></div>
+  </div>
+  <!-- STEP 2: คัดกรอง -->
+  <div class="sec" id="s2">
+    <div class="sec-t">คัดกรองอาการ</div>
+    <div class="sec-s">กรุณาตอบคำถามเบื้องต้น</div>
+    <div id="scrList"></div>
+  </div>
+  <!-- STEP 3: เลือกวัน -->
+  <div class="sec" id="s3">
+    <div class="sec-t">เลือกวันที่</div>
+    <div class="sec-s">จองล่วงหน้าได้ 7 วันทำการ ไม่รวมวันหยุด</div>
+    <div class="d-scroll" id="dateScroll"></div>
+  </div>
+  <!-- STEP 4: เลือกเวลา -->
+  <div class="sec" id="s4">
+    <div class="sec-t">เลือกเวลา</div>
+    <div class="sec-s" id="slotSubtitle">เลือกช่วงเวลาที่ต้องการ (รับได้ 3 คน/slot)</div>
+    <div id="slotLoading" class="ld hidden"><div class="sp"></div>กำลังโหลดเวลาว่าง...</div>
+    <div class="t-grid" id="slotGrid"></div>
+  </div>
+  <!-- STEP 5: กรอกข้อมูล -->
+  <div class="sec" id="s5">
+    <div class="sec-t">กรอกข้อมูลผู้รับบริการ</div>
+    <div class="sec-s">กรุณากรอกข้อมูลเพื่อยืนยันการจอง</div>
+    <div class="fg"><label class="fl">ชื่อ-สกุล <span class="req">*</span></label><input type="text" class="fi" id="fName" placeholder="กรอกชื่อ-สกุล"></div>
+    <div class="fg"><label class="fl">HN (เลขประจำตัวผู้ป่วย)</label><input type="text" class="fi" id="fHn" placeholder="กรอก HN (ถ้ามี)"><div class="fn">ถ้าไม่มีหรือไม่ทราบ สามารถเว้นว่างได้</div></div>
+    <div class="fg"><label class="fl">เบอร์โทรศัพท์ <span class="req">*</span></label><input type="tel" class="fi" id="fPhone" placeholder="0xx-xxx-xxxx"></div>
+    <div class="fg"><label class="fl">สิทธิ์การรักษา <span class="req">*</span></label><div class="ins-grid" id="insGrid"></div></div>
+    <div class="fg"><label class="fl">หมายเหตุเพิ่มเติม</label><input type="text" class="fi" id="fNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
+    <div class="sum"><div class="sum-h">📋 สรุปการจองคิว</div><div class="sum-b" id="sumBody"></div></div>
+    <div id="bookErr" class="err hidden"></div>
+  </div>
+  <!-- SUCCESS -->
+  <div class="sec" id="sOk">
+    <div class="ok-box">
+      <div class="ok-ic">✅</div>
+      <h2>จองคิวสำเร็จ!</h2>
+      <div class="ok-bid" id="okBid"></div>
+      <div class="sum"><div class="sum-h">📋 รายละเอียดการจอง</div><div class="sum-b" id="okSum"></div></div>
+      <a href="index.html" class="btn btn-o" style="display:inline-block;text-decoration:none;margin-top:12px;flex:none;padding:12px 24px">← กลับหน้าหลัก</a>
+    </div>
+  </div>
+  </div>
+  <div class="bbar" id="bbar">
+    <button class="btn btn-o hidden" id="bBack" onclick="goBack()">← ย้อนกลับ</button>
+    <button class="btn btn-p" id="bNext" onclick="goNext()" disabled>เลือกบริการ →</button>
+  </div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycby_9sZ_k-wlWTxR9fhPgky7ICbTsgJWUd1WVqOLU_K5twn-Oybr4P1rO-3rHKo_tfuFyQ/exec';
+const STEPS=5;
+let step=1;
+let S={services:[],dates:[],slots:[],screenQs:[],insTypes:[],selSvc:null,selDate:null,selSlot:null,selIns:null,screening:{}};
+
+async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return(await fetch(u)).json()}
+async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
+
+async function init(){
+  try{
+    const[svcR,dateR,scrR,insR]=await Promise.all([apiGet('getServices'),apiGet('getDates'),apiGet('getScreening'),apiGet('getInsuranceTypes')]);
+    if(svcR.success)S.services=svcR.services;
+    if(dateR.success)S.dates=dateR.dates;
+    if(scrR.success)S.screenQs=scrR.questions;
+    if(insR.success)S.insTypes=insR.insurance_types;
+    renderServices();
+  }catch(e){console.error('Init:',e)}
+}
+
+function renderServices(){
+  document.getElementById('svcGrid').innerHTML=S.services.map(s=>
+    `<div class="svc" onclick="pickSvc('${s.id}')"><div class="ic">${s.icon}</div><div class="nm">${s.name}</div><div class="dr">${s.duration}</div></div>`
+  ).join('');
+}
+function pickSvc(id){S.selSvc=S.services.find(s=>s.id===id);document.querySelectorAll('.svc').forEach(e=>e.classList.toggle('sel',e.querySelector('.nm').textContent===S.selSvc.name));updBtn()}
+
+function renderScreening(){
+  document.getElementById('scrList').innerHTML=S.screenQs.map(q=>{
+    if(q.type==='choice'){
+      return`<div class="scr-q"><label>${q.question}</label><div class="scr-opts">${q.options.map(o=>
+        `<div class="scr-opt${S.screening[q.id]===o?' sel':''}" onclick="pickScr('${q.id}','${o}',this)">${o}</div>`
+      ).join('')}</div></div>`;
+    }
+    return`<div class="scr-q"><label>${q.question}</label><input type="text" class="fi" placeholder="พิมพ์คำตอบ..." value="${S.screening[q.id]||''}" onchange="S.screening['${q.id}']=this.value"></div>`;
+  }).join('');
+}
+function pickScr(id,val,el){S.screening[id]=val;el.parentElement.querySelectorAll('.scr-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel')}
+
+function renderDates(){
+  document.getElementById('dateScroll').innerHTML=S.dates.filter(d=>d.available).map(d=>{
+    const dt=new Date(d.date+'T00:00:00+07:00');
+    const dn=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+    const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const isToday=d.date===new Date().toISOString().slice(0,10);
+    return`<div class="d-card${S.selDate&&S.selDate.date===d.date?' sel':''}" onclick="pickDate('${d.date}')">
+      <div class="dn">${isToday?'วันนี้':dn[dt.getDay()]}</div>
+      <div class="dd">${dt.getDate()}</div>
+      <div class="dm">${mn[dt.getMonth()]}</div>
+      <div class="dc">ว่าง ${d.remaining} คน</div>
+    </div>`;
+  }).join('');
+}
+function pickDate(date){S.selDate=S.dates.find(d=>d.date===date);document.querySelectorAll('.d-card').forEach(e=>e.classList.remove('sel'));event.currentTarget.classList.add('sel');updBtn()}
+
+async function loadSlots(){
+  if(!S.selDate)return;
+  document.getElementById('slotGrid').innerHTML='';
+  document.getElementById('slotLoading').classList.remove('hidden');
+  try{
+    const res=await apiGet('getSlots',{date:S.selDate.date});
+    document.getElementById('slotLoading').classList.add('hidden');
+    if(res.success){
+      S.slots=res.slots;
+      document.getElementById('slotGrid').innerHTML=S.slots.map(s=>{
+        const isFull=!s.available;
+        return`<div class="t-slot${isFull?' full':''}" data-i="${s.slot_index}" onclick="${isFull?'':'pickSlot('+s.slot_index+')'}">
+          <div class="ts">${s.time_start}</div>
+          <div class="tp">${s.period}</div>
+          <div class="tr">${isFull?'❌ เต็ม':'ว่าง '+s.remaining+'/'+s.max}</div>
+        </div>`;
+      }).join('');
+    }
+  }catch(e){document.getElementById('slotLoading').classList.add('hidden')}
+}
+function pickSlot(idx){S.selSlot=S.slots.find(s=>s.slot_index===idx);document.querySelectorAll('.t-slot').forEach(e=>e.classList.toggle('sel',parseInt(e.dataset.i)===idx));updBtn()}
+
+function renderInsurance(){
+  document.getElementById('insGrid').innerHTML=S.insTypes.map(t=>
+    `<div class="ins-opt" data-id="${t.id}" onclick="pickIns('${t.id}')"><div class="ins-ic">${t.icon}</div>${t.name}</div>`
+  ).join('');
+}
+function pickIns(id){S.selIns=S.insTypes.find(t=>t.id===id);document.querySelectorAll('.ins-opt').forEach(e=>e.classList.toggle('sel',e.dataset.id===id))}
+
+function renderSummary(){
+  renderInsurance();
+  const insName=S.selIns?S.selIns.name:'ยังไม่ได้เลือก';
+  document.getElementById('sumBody').innerHTML=[
+    ['บริการ',`${S.selSvc.icon} ${S.selSvc.name}`],
+    ['วันที่',S.selDate.label],
+    ['เวลา',`${S.selSlot.time_start} – ${S.selSlot.time_end}`],
+    ['แพทย์','แพทย์แผนจีน'],
+    ['สิทธิ์การรักษา',insName],
+  ].map(([l,v])=>`<div class="sum-r"><span class="sum-l">${l}</span><span class="sum-v">${v}</span></div>`).join('');
+}
+
+function goTo(s){step=s;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));
+  if(s<=STEPS)document.getElementById('s'+s).classList.add('on');
+  document.querySelectorAll('.dot').forEach(d=>{const n=parseInt(d.dataset.s);d.classList.remove('on','ok');if(n===s)d.classList.add('on');else if(n<s)d.classList.add('ok')});
+  if(s===2)renderScreening();if(s===3)renderDates();if(s===4)loadSlots();if(s===5)renderSummary();
+  updBtn();window.scrollTo(0,0)}
+function goNext(){if(step===STEPS){submitBooking();return}goTo(step+1)}
+function goBack(){if(step>1)goTo(step-1)}
+function updBtn(){
+  const bn=document.getElementById('bNext'),bb=document.getElementById('bBack'),bar=document.getElementById('bbar');
+  bb.classList.toggle('hidden',step<=1||step>STEPS);if(step>STEPS){bar.classList.add('hidden');return}bar.classList.remove('hidden');
+  const labels={1:'คัดกรองอาการ →',2:'เลือกวันที่ →',3:'เลือกเวลา →',4:'กรอกข้อมูล →',5:'✅ ยืนยันจองคิว'};
+  bn.textContent=labels[step]||'ถัดไป →';
+  let ok=false;
+  switch(step){case 1:ok=!!S.selSvc;break;case 2:ok=true;break;case 3:ok=!!S.selDate;break;case 4:ok=!!S.selSlot;break;case 5:ok=true;break}
+  bn.disabled=!ok;bn.className=step===5?'btn btn-ok':'btn btn-p';
+}
+
+async function submitBooking(){
+  const name=document.getElementById('fName').value.trim(),phone=document.getElementById('fPhone').value.trim(),hn=document.getElementById('fHn').value.trim(),note=document.getElementById('fNote').value.trim(),errEl=document.getElementById('bookErr');
+  if(!name){errEl.textContent='กรุณากรอกชื่อ-สกุล';errEl.classList.remove('hidden');return}
+  if(!phone){errEl.textContent='กรุณากรอกเบอร์โทรศัพท์';errEl.classList.remove('hidden');return}
+  if(!S.selIns){errEl.textContent='กรุณาเลือกสิทธิ์การรักษา';errEl.classList.remove('hidden');return}
+  errEl.classList.add('hidden');
+  const bn=document.getElementById('bNext');bn.disabled=true;bn.textContent='⏳ กำลังจองคิว...';
+  try{
+    const res=await apiPost({action:'book',date:S.selDate.date,slot_index:S.selSlot.slot_index,service_id:S.selSvc.id,patient_name:name,patient_hn:hn,patient_phone:phone,insurance_type:S.selIns.id,notes:note,screening_data:S.screening});
+    if(res.success){showSuccess(res)}else{errEl.textContent=res.error||'เกิดข้อผิดพลาด';errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว'}
+  }catch(e){errEl.textContent='เกิดข้อผิดพลาด: '+e.message;errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว'}
+}
+function showSuccess(r){
+  step=STEPS+1;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));document.getElementById('sOk').classList.add('on');document.getElementById('bbar').classList.add('hidden');
+  document.getElementById('okBid').textContent='รหัสนัด: '+r.booking_id;
+  const insName=S.selIns?S.selIns.name:'-';
+  document.getElementById('okSum').innerHTML=[
+    ['บริการ',`${S.selSvc.icon} ${S.selSvc.name}`],['วันที่',r.date_thai||S.selDate.label],
+    ['เวลา',`${r.time_start} – ${r.time_end}`],['แพทย์','แพทย์แผนจีน'],
+    ['สิทธิ์การรักษา',insName],['ชื่อผู้จอง',document.getElementById('fName').value],
+  ].map(([l,v])=>`<div class="sum-r"><span class="sum-l">${l}</span><span class="sum-v">${v}</span></div>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

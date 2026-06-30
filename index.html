@@ -190,6 +190,27 @@
     <div class="hdr-tag">🌿 จองคิวออนไลน์</div>
   </div>
 
+  <!-- STEP 0: เลือกคลินิก -->
+  <div id="clinicSelect" style="max-width:500px;margin:0 auto;padding:24px 16px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:22px;font-weight:800;color:var(--g800)">เลือกคลินิกที่ต้องการจองคิว</div>
+      <div style="font-size:14px;color:var(--g500);margin-top:4px">กรุณาเลือกประเภทการรักษาที่ต้องการ</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div onclick="selectClinic('ttm')" style="background:#fff;border:2px solid var(--g200);border-radius:16px;padding:24px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .25s ease" onmouseover="this.style.borderColor='#5B6F4A'" onmouseout="this.style.borderColor='#E5E2DB'">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#3D4D31,#5B6F4A);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🌿</div>
+        <div><div style="font-size:18px;font-weight:700;color:var(--g800)">แพทย์แผนไทยและแพทย์ทางเลือก</div>
+        <div style="font-size:13px;color:var(--g500);margin-top:2px">นวดแผนไทย · ประคบสมุนไพร · อบสมุนไพร · ฟื้นฟูมารดาหลังคลอด</div></div>
+      </div>
+      <div onclick="location.href='tcm-booking.html'" style="background:#fff;border:2px solid var(--g200);border-radius:16px;padding:24px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:all .25s ease" onmouseover="this.style.borderColor='#8B4513'" onmouseout="this.style.borderColor='#E5E2DB'">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5C2E0A,#8B4513);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🏥</div>
+        <div><div style="font-size:18px;font-weight:700;color:var(--g800)">แพทย์แผนจีน</div>
+        <div style="font-size:13px;color:var(--g500);margin-top:2px">ฝังเข็ม · ครอบแก้ว</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ttmBooking" style="display:none">
   <div class="stepper" id="stepper">
     <div class="dot on" data-s="1"></div><div class="dot" data-s="2"></div><div class="dot" data-s="3"></div>
     <div class="dot" data-s="4"></div><div class="dot" data-s="5"></div><div class="dot" data-s="6"></div>
@@ -259,10 +280,11 @@
     </div>
   </div>
 
-  <div class="bbar" id="bbar">
+  <div class="bbar" id="bbar" style="display:none">
     <button class="btn btn-s hidden" id="bBack" onclick="goBack()">← กลับ</button>
     <button class="btn btn-p" id="bNext" onclick="goNext()" disabled>เลือกบริการ →</button>
   </div>
+  </div><!-- end ttmBooking -->
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbw8b1iyu4V0m84WYROqoBzeR2R-Ke75iQ3tyJKOeBzIEZTYM015aAG27EXutjdOUmpS8g/exec';
@@ -410,7 +432,20 @@ function showSuccess(r){
 }
 
 async function initLiff(){if(typeof liff==='undefined'){init();return}try{await liff.init({liffId:'YOUR_LIFF_ID'})}catch(e){console.log('LIFF:',e)}init()}
-document.addEventListener('DOMContentLoaded',initLiff);
+
+function selectClinic(type){
+  if(type==='ttm'){
+    document.getElementById('clinicSelect').style.display='none';
+    document.getElementById('ttmBooking').style.display='block';
+    document.getElementById('bbar').style.display='flex';
+    initLiff();
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('clinic')==='ttm')selectClinic('ttm');
+});
 </script>
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </body>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin แพทย์แผนจีน — รพ.ควนโดน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--pri:#8B4513;--pri-dk:#5C2E0A;--pri-lt:#F5E6D3;--accent:#C41E3A;
+      --cream:#FAF5EF;--gold:#D4A017;--gold-lt:#FFF8E1;--white:#FFF;--red:#C0392B;
+      --g50:#FAF9F7;--g100:#F3F1ED;--g200:#E5E2DB;--g300:#C8C4BB;--g400:#9C9890;--g500:#706C65;--g600:#524F49;--g700:#3A3835;--g800:#252422;
+      --r:14px;--rs:10px;--tr:.25s ease}
+    body{font-family:'Sarabun',sans-serif;background:var(--cream);color:var(--g800);line-height:1.6;font-size:16px}
+    .hdr{background:linear-gradient(135deg,var(--pri-dk),var(--pri));padding:16px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+    .hdr h1{font-size:16px;font-weight:700}.hdr p{font-size:12px;color:rgba(255,255,255,.6)}
+    .hdr-tag{background:var(--gold);color:var(--g800);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+    .tabs{display:flex;background:#fff;border-bottom:2px solid var(--g200);position:sticky;top:0;z-index:50}
+    .tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;transition:all var(--tr)}
+    .tab.on{color:var(--pri);border-bottom-color:var(--pri);background:var(--pri-lt)}
+    .panel{display:none;padding:16px}.panel.on{display:block}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .stat{background:#fff;border-radius:var(--r);padding:12px;text-align:center;border:1px solid var(--g200)}
+    .stat-n{font-size:22px;font-weight:700}.stat-l{font-size:11px;color:var(--g500)}
+    .fi{width:100%;padding:12px;border:2px solid var(--g200);border-radius:var(--rs);font-size:16px;font-family:inherit;color:var(--g800);background:var(--white)}
+    .fi:focus{outline:none;border-color:var(--pri)}
+    .btn{padding:12px 20px;border-radius:var(--rs);font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit}
+    .btn-p{background:var(--pri);color:var(--white)}.btn-g{background:var(--gold);color:var(--g800)}
+    .tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--g200);background:#fff;margin-bottom:16px}
+    .tbl{width:100%;border-collapse:collapse;font-size:13px}
+    .tbl th{padding:10px 8px;font-weight:700;text-align:center;border:1px solid var(--g200)}
+    .tbl td{padding:8px;border:1px solid var(--g200);vertical-align:top;min-width:120px}
+    .tbl .th-period{background:var(--pri);color:#fff;font-size:14px}
+    .tbl .th-time{background:var(--pri-lt);color:var(--pri-dk);font-size:12px}
+    .tbl .th-num{background:var(--g100);color:var(--g600);font-size:11px;width:40px}
+    .td-booked{background:#E8F5E9}
+    .td-walkin{background:#FFF3E0}
+    .td-empty{background:#fff}
+    .p-name{font-weight:700;color:var(--g800);font-size:13px}
+    .p-svc{font-size:11px;color:var(--pri)}
+    .p-ins{font-size:10px;color:var(--g400)}
+    .p-actions{margin-top:4px}
+    .p-btn{font-size:10px;padding:2px 8px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;font-weight:600}
+    .ld{display:flex;flex-direction:column;align-items:center;padding:30px;color:var(--g400)}
+    .sp{width:28px;height:28px;border:3px solid var(--g200);border-top-color:var(--pri);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;padding:24px;color:var(--g400)}
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g800);color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;font-weight:600;z-index:200}
+    .search-result{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;border:1px solid var(--g200)}
+    .walkin-form{background:#fff;border-radius:var(--r);padding:16px;border:1px solid var(--g200)}
+    .fg{margin-bottom:12px}
+    .fl{display:block;font-size:14px;font-weight:600;margin-bottom:4px;color:var(--g700)}
+    .legend{font-size:12px;color:var(--g400);text-align:center;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <div><h1>🏥 Admin แพทย์แผนจีน</h1><p>โรงพยาบาลควนโดน จ.สตูล</p></div>
+    <div class="hdr-tag">ADMIN</div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" data-t="queue" onclick="switchTab('queue')">📋 ดูคิว</div>
+    <div class="tab" data-t="walkin" onclick="switchTab('walkin')">🚶 Walk-in</div>
+    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหา</div>
+  </div>
+
+  <!-- PANEL: คิว -->
+  <div class="panel on" id="pQueue">
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <button onclick="changeDate(-1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">←</button>
+      <input type="date" class="fi" id="qDate" onchange="loadQueue()" style="text-align:center;font-size:13px;padding:8px;font-weight:600;flex:1">
+      <button onclick="changeDate(1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">→</button>
+      <button onclick="goToday()" class="btn btn-p" style="font-size:11px;padding:8px 12px;white-space:nowrap">วันนี้</button>
+    </div>
+    <div style="text-align:center;font-size:13px;color:var(--g500);margin-bottom:12px" id="dateLabel"></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
+      <div class="stat"><div class="stat-n" id="stOnline" style="color:var(--pri)">-</div><div class="stat-l">จองออนไลน์</div></div>
+      <div class="stat"><div class="stat-n" id="stWalkin" style="color:var(--gold)">-</div><div class="stat-l">Walk-in</div></div>
+    </div>
+    <div id="queueTable"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
+  </div>
+
+  <!-- PANEL: Walk-in -->
+  <div class="panel" id="pWalkin">
+    <div class="walkin-form">
+      <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--pri)">🚶 Walk-in — เพิ่มคิวหน้างาน</div>
+      <div class="fg"><label class="fl">เลือกเวลา</label><select class="fi" id="wiSlot"></select></div>
+      <div class="fg"><label class="fl">บริการ</label><select class="fi" id="wiService"></select></div>
+      <div class="fg"><label class="fl">ชื่อ-สกุล *</label><input type="text" class="fi" id="wiName"></div>
+      <div class="fg"><label class="fl">HN</label><input type="text" class="fi" id="wiHn"></div>
+      <div class="fg"><label class="fl">เบอร์โทร</label><input type="tel" class="fi" id="wiPhone"></div>
+      <div class="fg"><label class="fl">สิทธิ์การรักษา</label><select class="fi" id="wiIns"></select></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="wiNote"></div>
+      <button class="btn btn-p" style="width:100%;padding:14px" onclick="submitWalkin()">✅ เพิ่มคิว Walk-in</button>
+      <div id="wiErr" style="color:var(--red);font-size:14px;margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- PANEL: ค้นหา -->
+  <div class="panel" id="pSearch">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" class="fi" id="searchInput" placeholder="พิมพ์ชื่อ, HN หรือรหัสจอง..." style="flex:1">
+      <button class="btn btn-p" onclick="doSearch()">🔍 ค้นหา</button>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycby_9sZ_k-wlWTxR9fhPgky7ICbTsgJWUd1WVqOLU_K5twn-Oybr4P1rO-3rHKo_tfuFyQ/exec';
+const SLOTS=[
+  {index:1,start:'09:00',end:'10:00',period:'เช้า'},
+  {index:2,start:'10:00',end:'11:00',period:'เช้า'},
+  {index:3,start:'11:00',end:'12:00',period:'เช้า'},
+  {index:4,start:'13:30',end:'14:30',period:'บ่าย'},
+  {index:5,start:'14:30',end:'15:30',period:'บ่าย'},
+  {index:6,start:'15:30',end:'16:30',period:'บ่าย'},
+];
+const MAX=3;
+let todayStr='';
+let allBookings=[];
+const insMap={uc:'บัตรทอง',social_security:'ปกส.',government:'ขรก.',cash:'จ่ายเอง',other:'อื่นๆ'};
+
+async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return(await fetch(u)).json()}
+async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
+
+function formatThaiDate(ds){const d=new Date(ds+'T00:00:00+07:00');const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return`วัน${dn[d.getDay()]}ที่ ${d.getDate()} ${mn[d.getMonth()]} ${d.getFullYear()+543}`}
+
+async function init(){
+  const now=new Date();
+  todayStr=now.toISOString().slice(0,10);
+  document.getElementById('qDate').value=todayStr;
+  updateDateLabel();
+  loadQueue();
+  loadWalkinForm();
+}
+
+function updateDateLabel(){
+  const ds=document.getElementById('qDate').value||todayStr;
+  document.getElementById('dateLabel').innerHTML=`📅 ${formatThaiDate(ds)}`;
+}
+function changeDate(d){const el=document.getElementById('qDate');const dt=new Date(el.value);dt.setDate(dt.getDate()+d);el.value=dt.toISOString().slice(0,10);updateDateLabel();loadQueue()}
+function goToday(){document.getElementById('qDate').value=todayStr;updateDateLabel();loadQueue()}
+
+async function loadQueue(){
+  const dateStr=document.getElementById('qDate').value||todayStr;
+  const box=document.getElementById('queueTable');
+  box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+  try{
+    const res=await apiGet('getBookings',{date:dateStr});
+    if(!res.success){box.innerHTML='<div class="empty">❌ '+res.error+'</div>';return}
+    allBookings=res.bookings||[];
+    renderTable(allBookings);
+  }catch(e){box.innerHTML='<div class="empty">❌ '+e.message+'</div>'}
+}
+
+function renderTable(bookings){
+  const box=document.getElementById('queueTable');
+  const total=bookings.length;
+  const online=bookings.filter(b=>b.booking_type==='online').length;
+  const walkin=bookings.filter(b=>b.booking_type==='walk-in').length;
+  document.getElementById('stTotal').textContent=total;
+  document.getElementById('stOnline').textContent=online;
+  document.getElementById('stWalkin').textContent=walkin;
+
+  // สร้างตาราง: แถว = ลำดับคนไข้ (1-3), คอลัมน์ = slot เวลา
+  let html='<div class="tbl-wrap"><table class="tbl">';
+
+  // Header: ช่วงเวลา
+  const morningSlots=SLOTS.filter(s=>s.period==='เช้า');
+  const afternoonSlots=SLOTS.filter(s=>s.period==='บ่าย');
+  html+=`<tr><th class="th-num" rowspan="2">ลำดับ</th>`;
+  html+=`<th class="th-period" colspan="${morningSlots.length}">ในเวลาราชการ (เช้า)</th>`;
+  html+=`<th class="th-period" style="background:var(--gold);color:var(--g800)" colspan="${afternoonSlots.length}">ในเวลาราชการ (บ่าย)</th></tr>`;
+
+  html+='<tr>';
+  SLOTS.forEach(s=>{html+=`<th class="th-time">${s.start}-${s.end}</th>`});
+  html+='</tr>';
+
+  // Data rows: 3 แถว (คนที่ 1, 2, 3 ในแต่ละ slot)
+  for(let p=0;p<MAX;p++){
+    html+=`<tr><td class="th-num" style="text-align:center;font-weight:700">${p+1}</td>`;
+    SLOTS.forEach(slot=>{
+      const slotBookings=bookings.filter(b=>b.time_start===slot.start);
+      const b=slotBookings[p];
+      if(b){
+        const isWalkin=b.booking_type==='walk-in';
+        const ins=insMap[b.insurance_type]||'';
+        html+=`<td class="${isWalkin?'td-walkin':'td-booked'}" onclick="viewDetail('${b.booking_id}')" style="cursor:pointer">
+          <span class="p-name">${b.patient_name||'-'}</span>
+          <span class="p-svc">${b.service_name||''}</span>
+          ${ins?`<span class="p-ins">${ins}</span>`:''}
+          <div class="p-actions">
+            <button class="p-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="event.stopPropagation();printCard('${b.booking_id}')">🖨️</button>
+            <button class="p-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBk('${b.booking_id}')">❌</button>
+          </div>
+        </td>`;
+      }else{
+        html+='<td class="td-empty"></td>';
+      }
+    });
+    html+='</tr>';
+  }
+
+  html+='</table></div>';
+  html+='<div class="legend">🟢 สีเขียว = จองออนไลน์ · 🟠 สีส้ม = Walk-in · ⬜ ว่าง · กดที่ช่องเพื่อดูรายละเอียด</div>';
+  box.innerHTML=html;
+}
+
+function viewDetail(bid){
+  const b=allBookings.find(x=>x.booking_id===bid);
+  if(!b)return;
+  const ins=insMap[b.insurance_type]||b.insurance_type||'-';
+  let scrHtml='';
+  if(b.screening){try{const s=JSON.parse(b.screening);scrHtml=Object.entries(s).map(([k,v])=>`<b>${k}:</b> ${v}`).join(' · ')}catch(e){}}
+  alert(`📋 รายละเอียดคิว\n\nรหัส: ${b.booking_id}\nชื่อ: ${b.patient_name}\nHN: ${b.patient_hn||'-'}\nเวลา: ${b.time_start} – ${b.time_end}\nบริการ: ${b.service_name}\nสิทธิ์: ${ins}\nประเภท: ${b.booking_type}\n${scrHtml?'\nคัดกรอง: '+scrHtml:''}\n${b.notes?'หมายเหตุ: '+b.notes:''}`);
+}
+
+async function cancelBk(bid){
+  if(!confirm('ยกเลิกคิว '+bid+' ?'))return;
+  const res=await apiPost({action:'cancel',booking_id:bid,reason:'ยกเลิกโดยเจ้าหน้าที่'});
+  if(res.success){showToast('❌ ยกเลิกแล้ว');loadQueue()}else{alert('Error: '+res.error)}
+}
+
+function printCard(bid){
+  const b=allBookings.find(x=>x.booking_id===bid);if(!b)return;
+  const dateStr=document.getElementById('qDate').value||todayStr;
+  const ins=insMap[b.insurance_type]||b.insurance_type||'-';
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(b.booking_id)}`;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบนัด ${b.booking_id}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Sarabun',sans-serif;font-size:14px;padding:20px}
+  .card{max-width:420px;margin:0 auto;border:2px solid #8B4513;border-radius:12px;overflow:hidden}
+  .card-h{background:linear-gradient(135deg,#5C2E0A,#8B4513);color:white;padding:16px 20px;text-align:center}
+  .card-h h2{font-size:16px}.card-h p{font-size:12px;opacity:.7}
+  .card-b{padding:18px 20px}
+  .title{text-align:center;font-size:18px;font-weight:700;color:#8B4513;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed #E5E2DB}
+  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F3F1ED}.row:last-child{border:none}
+  .label{color:#9C9890;font-size:13px}.value{font-weight:600;font-size:13px}
+  .qr{text-align:center;margin-top:14px;padding-top:14px;border-top:2px dashed #E5E2DB}
+  .qr img{width:120px}.qr p{font-size:11px;color:#9C9890;margin-top:4px}
+  .note{background:#FFF8E1;border:1px solid #F5D98A;border-radius:8px;padding:10px;margin-top:14px;font-size:12px;color:#7C6B2D;text-align:center;line-height:1.5}
+  @media print{body{padding:0}.card{border:none}@page{size:A5;margin:10mm}}</style></head><body>
+  <div class="card"><div class="card-h"><h2>🏥 คลินิกแพทย์แผนจีน</h2><p>โรงพยาบาลควนโดน จ.สตูล</p></div>
+  <div class="card-b"><div class="title">🏥 ใบนัดหมาย</div>
+  <div class="row"><span class="label">รหัสนัด</span><span class="value">${b.booking_id}</span></div>
+  <div class="row"><span class="label">ชื่อ-สกุล</span><span class="value">${b.patient_name}</span></div>
+  <div class="row"><span class="label">HN</span><span class="value">${b.patient_hn||'-'}</span></div>
+  <div class="row"><span class="label">วันที่</span><span class="value">${formatThaiDate(dateStr)}</span></div>
+  <div class="row"><span class="label">เวลา</span><span class="value">${b.time_start} – ${b.time_end}</span></div>
+  <div class="row"><span class="label">บริการ</span><span class="value">${b.service_name}</span></div>
+  <div class="row"><span class="label">สิทธิ์</span><span class="value">${ins}</span></div>
+  <div class="qr"><img src="${qrUrl}"><p>สแกน QR เพื่อตรวจสอบนัดหมาย</p></div>
+  <div class="note">⚠️ กรุณามาถึงก่อนเวลานัด 15 นาที พร้อมบัตรประชาชน</div>
+  </div></div><script>window.onload=function(){window.print()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// ============ WALK-IN ============
+async function loadWalkinForm(){
+  try{
+    const[svcR,insR]=await Promise.all([apiGet('getServices'),apiGet('getInsuranceTypes')]);
+    const slotSel=document.getElementById('wiSlot');
+    slotSel.innerHTML=SLOTS.map(s=>`<option value="${s.index}">${s.start} – ${s.end} (${s.period})</option>`).join('');
+    const svcSel=document.getElementById('wiService');
+    if(svcR.success)svcSel.innerHTML=svcR.services.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
+    const insSel=document.getElementById('wiIns');
+    if(insR.success)insSel.innerHTML=insR.insurance_types.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+  }catch(e){console.error(e)}
+}
+
+async function submitWalkin(){
+  const name=document.getElementById('wiName').value.trim();
+  if(!name){document.getElementById('wiErr').textContent='กรุณากรอกชื่อ';return}
+  document.getElementById('wiErr').textContent='';
+  try{
+    const res=await apiPost({
+      action:'walkin',
+      date:document.getElementById('qDate').value||todayStr,
+      slot_index:Number(document.getElementById('wiSlot').value),
+      service_id:document.getElementById('wiService').value,
+      patient_name:name,
+      patient_hn:document.getElementById('wiHn').value.trim(),
+      patient_phone:document.getElementById('wiPhone').value.trim(),
+      insurance_type:document.getElementById('wiIns').value,
+      notes:document.getElementById('wiNote').value.trim(),
+    });
+    if(res.success){
+      showToast('✅ เพิ่ม Walk-in สำเร็จ');
+      document.getElementById('wiName').value='';document.getElementById('wiHn').value='';
+      document.getElementById('wiPhone').value='';document.getElementById('wiNote').value='';
+      switchTab('queue');loadQueue();
+    }else{document.getElementById('wiErr').textContent=res.error}
+  }catch(e){document.getElementById('wiErr').textContent=e.message}
+}
+
+// ============ SEARCH ============
+async function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  if(!q)return;
+  const box=document.getElementById('searchResults');
+  box.innerHTML='<div class="ld"><div class="sp"></div>กำลังค้นหา...</div>';
+  try{
+    const res=await apiGet('searchPatient',{q:q});
+    if(!res.success||!res.bookings.length){box.innerHTML='<div class="empty">ไม่พบข้อมูล</div>';return}
+    box.innerHTML=res.bookings.map(b=>{
+      const ins=insMap[b.insurance_type]||b.insurance_type||'-';
+      return`<div class="search-result">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <b>${b.patient_name}</b><span style="font-size:12px;color:var(--g400)">${b.booking_id}</span>
+        </div>
+        <div style="font-size:13px;color:var(--g600)">
+          📅 ${b.date_thai||b.date} · 🕐 ${b.time_start}–${b.time_end} · 💆 ${b.service_name} · 🏥 ${ins}
+          · <span style="color:${b.status==='cancelled'?'var(--red)':'var(--pri)'}">${b.status}</span>
+        </div></div>`;
+    }).join('');
+  }catch(e){box.innerHTML='<div class="empty">❌ '+e.message+'</div>'}
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));
+  ['pQueue','pWalkin','pSearch'].forEach(id=>{
+    document.getElementById(id).classList.toggle('on',id==='p'+t.charAt(0).toUpperCase()+t.slice(1));
+  });
+  // Fix panel mapping
+  document.getElementById('pQueue').classList.toggle('on',t==='queue');
+  document.getElementById('pWalkin').classList.toggle('on',t==='walkin');
+  document.getElementById('pSearch').classList.toggle('on',t==='search');
+}
+
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
