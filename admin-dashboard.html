@@ -49,6 +49,26 @@
     .q-btn{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;border:none;cursor:pointer;font-family:inherit}
     .q-btn-cancel{background:#FEF2F2;color:var(--red)}.q-btn-view{background:var(--g100);color:var(--g600)}
 
+    /* TABLE VIEW */
+    .tbl-wrap{overflow-x:auto;margin-bottom:16px;border-radius:var(--r);border:1px solid var(--g200);background:#fff}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:800px}
+    .tbl th{padding:8px 6px;font-weight:700;text-align:center;border:1px solid var(--g200)}
+    .tbl td{padding:6px;border:1px solid var(--g200);vertical-align:top;min-width:100px;height:60px}
+    .tbl .th-period{background:var(--forest);color:#fff;font-size:13px}
+    .tbl .th-time{background:var(--sage);color:#fff;font-size:11px;white-space:nowrap}
+    .tbl .th-name{background:var(--cream);color:var(--g800);font-size:13px;white-space:nowrap;text-align:left;padding-left:10px;min-width:90px;position:sticky;left:0;z-index:2}
+    .tbl .td-name{background:var(--cream);font-weight:700;font-size:13px;text-align:left;padding-left:10px;position:sticky;left:0;z-index:2}
+    .tbl .td-slot{cursor:pointer;transition:background .2s;font-size:12px;line-height:1.5}
+    .tbl .td-slot:hover{background:var(--g50)}
+    .td-booked{background:#E1F5EE!important}
+    .td-walkin{background:#FFF7ED!important}
+    .td-empty{background:#fff}
+    .slot-name{font-weight:700;color:var(--g800);display:block;margin-bottom:1px}
+    .slot-svc{font-size:10px;color:var(--forest);display:block}
+    .slot-ins{font-size:10px;color:var(--g400);display:block}
+    .slot-actions{margin-top:3px;display:flex;gap:3px;flex-wrap:wrap}
+    .slot-btn{font-size:9px;padding:2px 6px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;font-weight:600}
+
     /* WALK-IN FORM */
     .wi-section{background:#fff;border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid var(--g200)}
     .wi-title{font-size:14px;font-weight:700;margin-bottom:10px;color:var(--g700)}
@@ -316,8 +336,15 @@ async function loadQueue() {
 
 function filterQueue() {
   const val = document.getElementById('provFilter').value;
-  const filtered = val === 'all' ? allBookings : allBookings.filter(b => b.provider_id === val);
-  renderQueue(filtered);
+  if (val === 'all') {
+    renderQueue(allBookings);
+  } else {
+    // แสดงเฉพาะผู้ให้บริการที่เลือก + ข้อมูลจอง
+    const origProviders = todayProviders;
+    todayProviders = origProviders.filter(p => p.id === val);
+    renderQueue(allBookings);
+    todayProviders = origProviders; // คืนค่าเดิม
+  }
 }
 
 function renderQueue(bookings) {
@@ -332,39 +359,91 @@ function renderQueue(bookings) {
   document.getElementById('stWalkin').textContent = walkin;
   document.getElementById('qBadge').textContent = total;
 
-  if (total === 0) {
-    list.innerHTML = '<div class="empty">📭 ยังไม่มีคิววันนี้</div>';
+  if (!todayProviders || todayProviders.length === 0) {
+    list.innerHTML = '<div class="empty">📭 ไม่มีผู้ให้บริการวันนี้</div>';
     return;
   }
 
-  // Sort by time
-  bookings.sort((a,b) => safeTime(a.time_start).localeCompare(safeTime(b.time_start)));
+  // กำหนดช่วงเวลา
+  const slotsIn = [
+    {start:'09:00',end:'10:00',label:'09:00-10:00'},
+    {start:'10:00',end:'11:00',label:'10:00-11:00'},
+    {start:'11:00',end:'12:00',label:'11:00-12:00'},
+    {start:'13:30',end:'14:30',label:'13:30-14:30'},
+    {start:'14:30',end:'15:30',label:'14:30-15:30'},
+  ];
+  const slotsOT = [
+    {start:'16:30',end:'17:30',label:'16:30-17:30'},
+    {start:'17:30',end:'18:30',label:'17:30-18:30'},
+    {start:'19:00',end:'20:00',label:'19:00-20:00'},
+  ];
+  const allSlots = [...slotsIn, ...slotsOT];
+  const insMap = {uc:'UC',social_security:'ปกส.',government:'ขรก.',cash:'จ่ายเอง',prb:'พรบ.',other:'อื่นๆ'};
 
-  list.innerHTML = bookings.map((b, i) => {
-    const isWalkin = b.booking_type === 'walk-in';
-    const typeClass = isWalkin ? 'walk-in' : 'online';
-    const typeLabel = isWalkin ? 'Walk-in' : 'ออนไลน์';
-    return `<div class="q-card${isWalkin?' walkin':''}">
-      <div class="q-head">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="q-num">${i+1}</div>
-          <div class="q-time">${safeTime(b.time_start)} – ${safeTime(b.time_end)}</div>
-        </div>
-        <span class="q-type ${typeClass}">${typeLabel}</span>
-      </div>
-      <div class="q-body">
-        <div>👤 <b>${b.patient_name||'-'}</b></div>
-        <div>🏷️ ${b.patient_hn||'-'}</div>
-        <div>👨‍⚕️ ${b.provider_name||'-'}</div>
-        <div>💆 ${b.service_name||'-'}</div>
-      </div>
-      <div class="q-actions">
-        <button class="q-btn q-btn-view" onclick="viewBooking('${b.booking_id}')">👁️ ดูรายละเอียด</button>
-        <button class="q-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="printAppointment('${b.booking_id}')">🖨️ พิมพ์ใบนัด</button>
-        <button class="q-btn q-btn-cancel" onclick="cancelBooking('${b.booking_id}')">❌ ยกเลิก</button>
-      </div>
-    </div>`;
-  }).join('');
+  // สร้างตาราง
+  let html = '<div class="tbl-wrap"><table class="tbl">';
+
+  // Header row 1: ในเวลา / นอกเวลา
+  html += '<tr><th class="th-name" rowspan="2">ชื่อผู้นวด</th>';
+  html += `<th class="th-period" colspan="${slotsIn.length}">ในเวลาราชการ</th>`;
+  html += `<th class="th-period" style="background:var(--gold);color:var(--g800)" colspan="${slotsOT.length}">นอกเวลาราชการ</th>`;
+  html += '</tr>';
+
+  // Header row 2: เวลาแต่ละช่อง
+  html += '<tr>';
+  allSlots.forEach(s => {
+    html += `<th class="th-time">${s.label}</th>`;
+  });
+  html += '</tr>';
+
+  // Data rows: ผู้ให้บริการแต่ละคน
+  todayProviders.forEach(prov => {
+    html += `<tr><td class="td-name">${prov.name}</td>`;
+
+    allSlots.forEach(slot => {
+      // หา booking ที่ตรงกับ provider + เวลานี้
+      const booking = bookings.find(b =>
+        b.provider_id === prov.id &&
+        safeTime(b.time_start) === slot.start
+      );
+
+      // เช็คว่าเป็น slot ที่ 2 ของบริการ 2 ชม. (ฟื้นฟูมารดา/นวด 2 ชม.)
+      const booking2hr = bookings.find(b =>
+        b.provider_id === prov.id &&
+        safeTime(b.time_end) === slot.end &&
+        safeTime(b.time_start) !== slot.start
+      );
+
+      if (booking) {
+        const isWalkin = booking.booking_type === 'walk-in';
+        const ins = insMap[booking.insurance_type] || '';
+        html += `<td class="td-slot ${isWalkin ? 'td-walkin' : 'td-booked'}" onclick="viewBooking('${booking.booking_id}')">
+          <span class="slot-name">${booking.patient_name || '-'}</span>
+          <span class="slot-svc">${booking.service_name || ''}</span>
+          ${ins ? `<span class="slot-ins">${ins}</span>` : ''}
+          <div class="slot-actions">
+            <button class="slot-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="event.stopPropagation();printAppointment('${booking.booking_id}')">🖨️</button>
+            <button class="slot-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBooking('${booking.booking_id}')">❌</button>
+          </div>
+        </td>`;
+      } else if (booking2hr) {
+        html += `<td class="td-slot td-booked" style="opacity:.5;text-align:center;font-size:11px;color:var(--g400)" onclick="viewBooking('${booking2hr.booking_id}')">⟵ ต่อเนื่อง</td>`;
+      } else {
+        html += '<td class="td-slot td-empty"></td>';
+      }
+    });
+
+    html += '</tr>';
+  });
+
+  html += '</table></div>';
+
+  // สรุปจำนวน
+  html += `<div style="font-size:12px;color:var(--g400);text-align:center;margin-top:8px">
+    🟢 สีเขียว = จองออนไลน์ &nbsp; 🟠 สีส้ม = Walk-in &nbsp; ⬜ ว่าง &nbsp;|&nbsp; กดที่ช่องเพื่อดูรายละเอียด
+  </div>`;
+
+  list.innerHTML = html;
 }
 
 async function viewBooking(bid) {
