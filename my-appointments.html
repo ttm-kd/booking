@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ดูนัดของฉัน — คลินิกแพทย์แผนไทยฯ รพ.ควนโดน</title>
+  <title>ดูนัดของฉัน — คลินิกแพทย์แผนไทยฯ และแพทย์แผนจีน รพ.ควนโดน</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -90,14 +90,18 @@
       </svg>
     </div>
     <h1>ดูนัดหมายของฉัน</h1>
-    <p>คลินิกแพทย์แผนไทยฯ โรงพยาบาลควนโดน</p>
+    <p>แพทย์แผนไทยฯ และแพทย์แผนจีน โรงพยาบาลควนโดน</p>
   </div>
 
   <div class="container">
     <!-- Search Form -->
     <div class="search-box">
       <h2>🔍 ค้นหานัดหมาย</h2>
-      <div class="desc">กรุณากรอกข้อมูลเพื่อค้นหานัดหมายของท่าน<br>ต้องกรอก <b>ชื่อ + เบอร์โทร</b> หรือ <b>เลข HN</b></div>
+      <div class="desc">ค้นหาได้ 3 วิธี:<br>
+        1️⃣ <b>ชื่อ-สกุล + เบอร์โทร</b><br>
+        2️⃣ <b>ชื่อ-สกุล + HN</b><br>
+        3️⃣ <b>เลขหมายการจอง</b> (BK-... หรือ TCM-...)
+      </div>
 
       <div class="fg">
         <label class="fl">ชื่อ-สกุล</label>
@@ -107,12 +111,16 @@
         <label class="fl">เบอร์โทรศัพท์</label>
         <input type="tel" class="fi" id="sPhone" placeholder="0xx-xxx-xxxx">
       </div>
+      <div class="fg">
+        <label class="fl">HN (เลขประจำตัวผู้ป่วย)</label>
+        <input type="text" class="fi" id="sHn" placeholder="กรอกเลข HN">
+      </div>
 
       <div class="divider">หรือ</div>
 
       <div class="fg">
-        <label class="fl">เลข HN (เลขประจำตัวผู้ป่วย)</label>
-        <input type="text" class="fi" id="sHn" placeholder="กรอกเลข HN">
+        <label class="fl">เลขหมายการจอง</label>
+        <input type="text" class="fi" id="sBookingId" placeholder="เช่น BK-20260702-XXXX หรือ TCM-20260702-XXXX">
       </div>
 
       <div id="sErr" class="err hidden"></div>
@@ -132,15 +140,16 @@
   </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbw8b1iyu4V0m84WYROqoBzeR2R-Ke75iQ3tyJKOeBzIEZTYM015aAG27EXutjdOUmpS8g/exec';
+const API_TTM = 'https://script.google.com/macros/s/AKfycbw8b1iyu4V0m84WYROqoBzeR2R-Ke75iQ3tyJKOeBzIEZTYM015aAG27EXutjdOUmpS8g/exec';
+const API_TCM = 'https://script.google.com/macros/s/AKfycby_9sZ_k-wlWTxR9fhPgky7ICbTsgJWUd1WVqOLU_K5twn-Oybr4P1rO-3rHKo_tfuFyQ/exec';
 
-async function apiGet(action, p={}) {
-  const u = new URL(API); u.searchParams.set('action', action);
+async function apiGet(apiUrl, action, p={}) {
+  const u = new URL(apiUrl); u.searchParams.set('action', action);
   Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));
   return (await fetch(u)).json();
 }
-async function apiPost(body) {
-  return (await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})).json();
+async function apiPost(apiUrl, body) {
+  return (await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)})).json();
 }
 function safeTime(v){
   if(!v)return'00:00';const s=String(v);
@@ -152,52 +161,79 @@ async function doSearch() {
   const name = document.getElementById('sName').value.trim();
   const phone = document.getElementById('sPhone').value.trim();
   const hn = document.getElementById('sHn').value.trim();
+  const bookingId = document.getElementById('sBookingId').value.trim();
   const errEl = document.getElementById('sErr');
   const box = document.getElementById('results');
 
-  // Validate: ต้องมี (ชื่อ + เบอร์โทร) หรือ HN
-  if (!hn && (!name || !phone)) {
-    errEl.textContent = 'กรุณากรอก "ชื่อ + เบอร์โทร" หรือ "เลข HN"';
+  // Validate: ต้องมี (ชื่อ+เบอร์) หรือ (ชื่อ+HN) หรือ เลขจอง
+  if (!bookingId && !hn && (!name || !phone) && (!name || !hn)) {
+    if (name && !phone && !hn) {
+      errEl.textContent = 'กรุณากรอกเบอร์โทร หรือ HN เพิ่มด้วย เพื่อยืนยันตัวตน';
+    } else {
+      errEl.textContent = 'กรุณากรอก "ชื่อ+เบอร์โทร" หรือ "ชื่อ+HN" หรือ "เลขหมายการจอง"';
+    }
     errEl.classList.remove('hidden');
     return;
   }
   errEl.classList.add('hidden');
 
-  // Search
   const btn = document.getElementById('sBtn');
   btn.disabled = true; btn.textContent = '⏳ กำลังค้นหา...';
   box.innerHTML = '<div class="ld"><div class="sp"></div>กำลังค้นหานัดหมาย...</div>';
 
   try {
-    // ค้นหาด้วย HN ก่อน ถ้ามี
-    const query = hn || name;
-    const res = await apiGet('searchPatient', { q: query });
+    const query = bookingId || hn || name;
 
-    if (!res.success) {
-      box.innerHTML = '<div class="err">' + (res.error || 'เกิดข้อผิดพลาด') + '</div>';
-      btn.disabled = false; btn.textContent = '🔍 ค้นหานัดหมาย';
-      return;
-    }
+    // ค้นหาทั้ง 2 ระบบพร้อมกัน
+    const [ttmRes, tcmRes] = await Promise.all([
+      apiGet(API_TTM, 'searchPatient', { q: query }).catch(() => ({ success: false, bookings: [] })),
+      apiGet(API_TCM, 'searchPatient', { q: query }).catch(() => ({ success: false, bookings: [] })),
+    ]);
 
-    let bookings = res.bookings || [];
+    let ttmBookings = ttmRes.bookings || [];
+    let tcmBookings = tcmRes.bookings || [];
 
-    // กรองเพิ่มเติม: ต้องตรงทั้งชื่อ + เบอร์โทร (ถ้าค้นด้วยชื่อ)
-    if (!hn && name && phone) {
+    // กรองเพิ่มเติมตามเงื่อนไข PDPA
+    if (bookingId) {
+      // ค้นหาด้วยเลขจอง → ตรง exact
+      ttmBookings = ttmBookings.filter(b => String(b.booking_id).toLowerCase() === bookingId.toLowerCase());
+      tcmBookings = tcmBookings.filter(b => String(b.booking_id).toLowerCase() === bookingId.toLowerCase());
+    } else if (name && phone && !hn) {
+      // ค้นหาด้วย ชื่อ+เบอร์
       const nameLower = name.toLowerCase();
       const phoneClean = phone.replace(/[- ]/g, '');
-      bookings = bookings.filter(b => {
+      ttmBookings = ttmBookings.filter(b => {
         const bName = String(b.patient_name || '').toLowerCase();
         const bPhone = String(b.patient_phone || '').replace(/[- ]/g, '');
         return bName.includes(nameLower) && bPhone.includes(phoneClean);
       });
+      tcmBookings = tcmBookings.filter(b => {
+        const bName = String(b.patient_name || '').toLowerCase();
+        const bPhone = String(b.patient_phone || '').replace(/[- ]/g, '');
+        return bName.includes(nameLower) && bPhone.includes(phoneClean);
+      });
+    } else if (name && hn) {
+      // ค้นหาด้วย ชื่อ+HN
+      const nameLower = name.toLowerCase();
+      ttmBookings = ttmBookings.filter(b => {
+        const bName = String(b.patient_name || '').toLowerCase();
+        const bHn = String(b.patient_hn || '').toLowerCase();
+        return bName.includes(nameLower) && bHn === hn.toLowerCase();
+      });
+      tcmBookings = tcmBookings.filter(b => {
+        const bName = String(b.patient_name || '').toLowerCase();
+        const bHn = String(b.patient_hn || '').toLowerCase();
+        return bName.includes(nameLower) && bHn === hn.toLowerCase();
+      });
+    } else if (hn) {
+      // ค้นหาด้วย HN อย่างเดียว
+      ttmBookings = ttmBookings.filter(b => String(b.patient_hn || '').toLowerCase() === hn.toLowerCase());
+      tcmBookings = tcmBookings.filter(b => String(b.patient_hn || '').toLowerCase() === hn.toLowerCase());
     }
 
-    // ถ้าค้นด้วย HN → ตรวจสอบ HN ตรง
-    if (hn) {
-      bookings = bookings.filter(b => String(b.patient_hn || '').toLowerCase() === hn.toLowerCase());
-    }
+    const totalFound = ttmBookings.length + tcmBookings.length;
 
-    if (bookings.length === 0) {
+    if (totalFound === 0) {
       box.innerHTML = `<div class="empty">
         <div class="ic">📭</div>
         <div style="font-size:16px;font-weight:600;color:var(--g700)">ไม่พบนัดหมาย</div>
@@ -208,29 +244,20 @@ async function doSearch() {
       return;
     }
 
-    // แสดงผล — ซ่อนข้อมูลส่วนตัวบางส่วน
-    box.innerHTML = `<div style="font-size:14px;color:var(--g500);margin-bottom:12px;font-weight:600">📋 พบนัดหมาย ${bookings.length} รายการ</div>` +
-      bookings.map(b => {
-        const isConfirmed = b.status === 'confirmed';
-        const statusClass = isConfirmed ? 'confirmed' : 'cancelled';
-        const statusLabel = isConfirmed ? '✅ ยืนยัน' : '❌ ยกเลิกแล้ว';
+    // แสดงผลแยกแผนไทย / แผนจีน
+    let html = `<div style="font-size:14px;color:var(--g500);margin-bottom:12px;font-weight:600">📋 พบนัดหมายทั้งหมด ${totalFound} รายการ</div>`;
 
-        return `<div class="bk-card${isConfirmed ? '' : ' cancelled'}">
-          <div class="bk-head">
-            <span class="bk-id">${b.booking_id}</span>
-            <span class="bk-status ${statusClass}">${statusLabel}</span>
-          </div>
-          <div class="bk-body">
-            <div class="bk-row">📅 <b>${b.date_thai || b.date}</b></div>
-            <div class="bk-row">🕐 <b>${safeTime(b.time_start)} – ${safeTime(b.time_end)}</b></div>
-            <div class="bk-row">👨‍⚕️ ${b.provider_name || '-'}</div>
-            <div class="bk-row">💆 ${b.service_name || '-'}</div>
-          </div>
-          ${isConfirmed ? `<div class="bk-actions">
-            <button class="bk-btn bk-btn-cancel" onclick="cancelMyBooking('${b.booking_id}')">❌ ยกเลิกนัดนี้</button>
-          </div>` : ''}
-        </div>`;
-      }).join('');
+    if (ttmBookings.length > 0) {
+      html += `<div style="font-size:15px;font-weight:700;color:#5B6F4A;margin:16px 0 10px;padding:10px 14px;background:#D4E4DF;border-radius:var(--rs)">🌿 แพทย์แผนไทยและแพทย์ทางเลือก (${ttmBookings.length} รายการ)</div>`;
+      html += renderBookings(ttmBookings, 'ttm');
+    }
+
+    if (tcmBookings.length > 0) {
+      html += `<div style="font-size:15px;font-weight:700;color:#8B4513;margin:16px 0 10px;padding:10px 14px;background:#F5E6D3;border-radius:var(--rs)">🏥 แพทย์แผนจีน (${tcmBookings.length} รายการ)</div>`;
+      html += renderBookings(tcmBookings, 'tcm');
+    }
+
+    box.innerHTML = html;
 
   } catch(e) {
     box.innerHTML = '<div class="err">เกิดข้อผิดพลาด: ' + e.message + '</div>';
@@ -239,20 +266,45 @@ async function doSearch() {
   btn.disabled = false; btn.textContent = '🔍 ค้นหานัดหมาย';
 }
 
-async function cancelMyBooking(bid) {
+function renderBookings(bookings, type) {
+  return bookings.map(b => {
+    const isConfirmed = b.status === 'confirmed' || b.status === 'completed';
+    const statusLabel = b.status === 'confirmed' ? '✅ ยืนยัน' : b.status === 'completed' ? '✅ เสร็จสิ้น' : '❌ ยกเลิกแล้ว';
+    const statusClass = isConfirmed ? 'confirmed' : 'cancelled';
+    const doctorName = type === 'tcm' ? 'แพทย์แผนจีน' : (b.provider_name || '-');
+
+    return `<div class="bk-card${isConfirmed ? '' : ' cancelled'}">
+      <div class="bk-head">
+        <span class="bk-id">${b.booking_id}</span>
+        <span class="bk-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="bk-body">
+        <div class="bk-row">📅 <b>${b.date_thai || b.date}</b></div>
+        <div class="bk-row">🕐 <b>${safeTime(b.time_start)} – ${safeTime(b.time_end)}</b></div>
+        <div class="bk-row">👨‍⚕️ ${doctorName}</div>
+        <div class="bk-row">💆 ${b.service_name || '-'}</div>
+      </div>
+      ${isConfirmed && b.status === 'confirmed' ? `<div class="bk-actions">
+        <button class="bk-btn bk-btn-cancel" onclick="cancelMyBooking('${b.booking_id}','${type}')">❌ ยกเลิกนัดนี้</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function cancelMyBooking(bid, type) {
   if (!confirm('ยืนยันยกเลิกนัดหมาย ' + bid + ' หรือไม่?')) return;
   try {
-    const res = await apiPost({ action: 'cancel', booking_id: bid, reason: 'ผู้ป่วยยกเลิกเอง' });
+    const apiUrl = type === 'tcm' ? API_TCM : API_TTM;
+    const res = await apiPost(apiUrl, { action: 'cancel', booking_id: bid, reason: 'ผู้ป่วยยกเลิกเอง' });
     if (res.success) {
       alert('✅ ยกเลิกนัดหมายเรียบร้อยแล้ว');
-      doSearch(); // refresh
+      doSearch();
     } else {
       alert('❌ ไม่สามารถยกเลิกได้: ' + (res.error || ''));
     }
   } catch(e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
 }
 
-// Enter key to search
 document.querySelectorAll('.fi').forEach(el => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 });
