@@ -359,9 +359,19 @@ async function loadSlots(){
     if(!res.success){box.innerHTML='<div class="err">'+res.error+'</div>';return}
     S.slots=res.available||[];
     if(!S.slots.length){box.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีช่วงเวลาว่าง</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่นหรือผู้ให้บริการท่านอื่น</div></div>';return}
+
+    // ล็อค slot ที่จอง 2 ชม. ไม่ได้ (ติดเวลาพัก/สิ้นสุดวัน)
+    const is2hr=S.selSvc&&S.selSvc.slotsNeeded>1;
+    const blocked2hr=['11:00','14:30','17:30','19:00'];
+
     const periods={};S.slots.forEach(s=>{const p=s.period||'อื่นๆ';if(!periods[p])periods[p]=[];periods[p].push(s)});
     const icons={'เช้า':'🌅 ช่วงเช้า (09:00–12:00)','บ่าย':'☀️ ช่วงบ่าย (13:30–15:30)','นอกเวลาราชการ':'🌙 นอกเวลาราชการ (16:30–20:00)'};
-    box.innerHTML=Object.entries(periods).map(([p,slots])=>`<div class="t-period"><div class="t-label">${icons[p]||p}</div><div class="t-grid">${slots.map(s=>`<div class="t-slot" data-i="${s.slot_index}" onclick="pickSlot(${s.slot_index})"><div class="tt">${safeTime(s.time_start)}</div><div class="te">ถึง ${safeTime(s.time_end)}</div></div>`).join('')}</div></div>`).join('');
+    box.innerHTML=Object.entries(periods).map(([p,slots])=>`<div class="t-period"><div class="t-label">${icons[p]||p}</div><div class="t-grid">${slots.map(s=>{
+      const timeStr=safeTime(s.time_start);
+      const isBlocked=is2hr&&blocked2hr.includes(timeStr);
+      if(isBlocked)return`<div class="t-slot" style="opacity:.3;pointer-events:none;background:var(--g100)" data-i="${s.slot_index}"><div class="tt">${timeStr}</div><div class="te" style="color:var(--red);font-size:11px">❌ ติดเวลาพัก</div></div>`;
+      return`<div class="t-slot" data-i="${s.slot_index}" onclick="pickSlot(${s.slot_index})"><div class="tt">${timeStr}</div><div class="te">ถึง ${safeTime(s.time_end)}</div></div>`;
+    }).join('')}</div></div>`).join('');
   }catch(e){box.innerHTML='<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>'}
 }
 function pickSlot(idx){S.selSlot=S.slots.find(s=>s.slot_index===idx);document.querySelectorAll('.t-slot').forEach(e=>e.classList.toggle('sel',parseInt(e.dataset.i)===idx));updBtn()}
