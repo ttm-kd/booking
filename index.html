@@ -361,7 +361,7 @@ async function loadSlots(){
     if(!S.slots.length){box.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีช่วงเวลาว่าง</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่นหรือผู้ให้บริการท่านอื่น</div></div>';return}
 
     // ล็อค slot ที่จอง 2 ชม. ไม่ได้ (ติดเวลาพัก/สิ้นสุดวัน)
-    const is2hr=S.selSvc&&S.selSvc.slotsNeeded>1;
+    const is2hr=S.selSvc&&S.selSvc.slots>1;
     const blocked2hr=['11:00','14:30','17:30','19:00'];
 
     const periods={};S.slots.forEach(s=>{const p=s.period||'อื่นๆ';if(!periods[p])periods[p]=[];periods[p].push(s)});
