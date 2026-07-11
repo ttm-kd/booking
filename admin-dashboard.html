@@ -149,10 +149,11 @@
       <div class="stat"><div class="stat-n" id="stWalkin" style="color:var(--orange)">-</div><div class="stat-l">Walk-in</div></div>
     </div>
     <!-- Provider filter -->
-    <div style="margin-bottom:12px">
-      <select class="fi" id="provFilter" onchange="filterQueue()" style="font-size:13px;padding:8px 12px">
+    <div style="margin-bottom:12px;display:flex;gap:8px">
+      <select class="fi" id="provFilter" onchange="filterQueue()" style="font-size:13px;padding:8px 12px;flex:1">
         <option value="all">👥 ผู้ให้บริการทั้งหมด</option>
       </select>
+      <button onclick="printQueueTable()" class="no-print" style="padding:8px 16px;border-radius:var(--rs);background:var(--gold);color:var(--g800);border:none;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🖨️ พิมพ์ตาราง</button>
     </div>
     <div id="queueList"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
   </div>
@@ -444,6 +445,77 @@ function renderQueue(bookings) {
   </div>`;
 
   list.innerHTML = html;
+}
+
+function printQueueTable() {
+  const dateStr = document.getElementById('queueDate').value || todayStr;
+  const bookings = allBookings;
+  if (!todayProviders || todayProviders.length === 0) { alert('ไม่มีข้อมูลตารางให้พิมพ์'); return; }
+
+  const allSlots = [
+    {start:'09:00',end:'10:00',label:'09:00-10:00'},{start:'10:00',end:'11:00',label:'10:00-11:00'},{start:'11:00',end:'12:00',label:'11:00-12:00'},
+    {start:'13:30',end:'14:30',label:'13:30-14:30'},{start:'14:30',end:'15:30',label:'14:30-15:30'},
+    {start:'16:30',end:'17:30',label:'16:30-17:30'},{start:'17:30',end:'18:30',label:'17:30-18:30'},{start:'19:00',end:'20:00',label:'19:00-20:00'},
+  ];
+  const insMap = {uc:'UC',social_security:'ปกส.',government:'ขรก.',cash:'จ่ายเอง',prb:'พรบ.',other:'อื่นๆ'};
+
+  let rows = '';
+  todayProviders.forEach(prov => {
+    rows += `<tr><td class="name">${prov.name}</td>`;
+    allSlots.forEach(slot => {
+      const booking = bookings.find(b => b.provider_id === prov.id && safeTime(b.time_start) === slot.start);
+      const booking2hr = bookings.find(b => b.provider_id === prov.id && safeTime(b.time_end) === slot.end && safeTime(b.time_start) !== slot.start);
+      if (booking) {
+        const ins = insMap[booking.insurance_type] || '';
+        rows += `<td class="booked"><b>${booking.patient_name||'-'}</b><br><span class="svc">${booking.service_name||''}</span>${ins?`<br><span class="ins">${ins}</span>`:''}</td>`;
+      } else if (booking2hr) {
+        rows += `<td class="cont">⟵ ต่อเนื่อง</td>`;
+      } else {
+        rows += `<td></td>`;
+      }
+    });
+    rows += '</tr>';
+  });
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>ตารางคิว ${formatThaiDate(dateStr)}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Sarabun',sans-serif;padding:16px;font-size:12px}
+    .hdr{text-align:center;margin-bottom:12px}
+    .hdr h1{font-size:17px;color:#5B6F4A}
+    .hdr p{font-size:13px;color:#524F49;margin-top:2px}
+    .hdr .stats{font-size:12px;color:#706C65;margin-top:4px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #C8C4BB;padding:6px 4px;text-align:center;vertical-align:top}
+    th{background:#5B6F4A;color:#fff;font-size:11px}
+    th.ot{background:#E5B94E;color:#252422}
+    td.name{background:#E8E4DA;font-weight:700;text-align:left;padding-left:8px;font-size:12px;white-space:nowrap}
+    td.booked{background:#E1F5EE;font-size:11px;line-height:1.4}
+    td.cont{background:#F3F1ED;color:#9C9890;font-size:10px}
+    .svc{font-size:10px;color:#5B6F4A}
+    .ins{font-size:9px;color:#9C9890}
+    .sign{margin-top:24px;display:flex;justify-content:space-around;font-size:12px}
+    .sign div{text-align:center}
+    .sign .line{border-top:1px dotted #999;margin-top:36px;padding-top:4px;min-width:160px}
+    @media print{@page{size:A4 landscape;margin:8mm}}
+  </style></head><body>
+  <div class="hdr">
+    <h1>🌿 ตารางคิว คลินิกแพทย์แผนไทยและแพทย์ทางเลือก</h1>
+    <p>โรงพยาบาลควนโดน จ.สตูล · ${formatThaiDate(dateStr)}</p>
+    <div class="stats">รวม ${bookings.length} คิว · จองออนไลน์ ${bookings.filter(b=>b.booking_type!=='walk-in').length} · Walk-in ${bookings.filter(b=>b.booking_type==='walk-in').length}</div>
+  </div>
+  <table>
+    <tr><th rowspan="2">ชื่อผู้นวด</th><th colspan="5">ในเวลาราชการ</th><th class="ot" colspan="3">นอกเวลาราชการ</th></tr>
+    <tr>${allSlots.map(s=>`<th>${s.label}</th>`).join('')}</tr>
+    ${rows}
+  </table>
+  <div class="sign"><div><div class="line">ผู้จัดตาราง</div></div><div><div class="line">หัวหน้าคลินิก</div></div></div>
+  <script>window.onload=function(){window.print()}<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 async function viewBooking(bid) {
