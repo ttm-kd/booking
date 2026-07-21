@@ -120,6 +120,14 @@
 
     /* ===== INSURANCE TYPE ===== */
     .ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .gender-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .gender-opt{background:var(--white);border:2px solid var(--g200);border-radius:var(--r);padding:20px 12px;cursor:pointer;text-align:center;transition:all var(--tr)}
+    .gender-opt:active{transform:scale(.97)}
+    .gender-opt.sel{border-color:var(--forest);background:linear-gradient(135deg,var(--sage-lt),var(--cream-lt))}
+    .gender-opt .g-ic{font-size:36px;margin-bottom:6px}
+    .gender-opt .g-nm{font-size:16px;font-weight:700;color:var(--g800)}
+    .gender-opt .g-sub{font-size:11px;color:var(--g400);margin-top:2px}
+    .notice-box{background:#FEF9E7;border:1px solid #F5D98A;border-radius:var(--rs);padding:14px;margin-bottom:16px}
     .ins-opt{background:var(--white);border:2px solid var(--g200);border-radius:var(--rs);padding:12px;cursor:pointer;text-align:center;transition:all var(--tr);font-size:14px;font-weight:600;color:var(--g700)}
     .ins-opt:active{transform:scale(.97)}
     .ins-opt.sel{border-color:var(--forest);background:linear-gradient(135deg,var(--sage-lt),var(--cream-lt));color:var(--forest-dk)}
@@ -213,49 +221,75 @@
   <div id="ttmBooking" style="display:none">
   <div class="stepper" id="stepper">
     <div class="dot on" data-s="1"></div><div class="dot" data-s="2"></div><div class="dot" data-s="3"></div>
-    <div class="dot" data-s="4"></div><div class="dot" data-s="5"></div><div class="dot" data-s="6"></div>
+    <div class="dot" data-s="4"></div><div class="dot" data-s="5"></div><div class="dot" data-s="6"></div><div class="dot" data-s="7"></div>
   </div>
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: เลือกบริการ -->
   <div class="sec on" id="s1">
     <div class="sec-t">เลือกบริการ</div>
     <div class="sec-s">เลือกประเภทบริการที่ต้องการรับบริการ</div>
     <div class="svc-grid" id="svcGrid"></div>
   </div>
 
-  <!-- STEP 2 -->
+  <!-- STEP 2: เลือกเพศผู้ป่วย -->
   <div class="sec" id="s2">
+    <div class="sec-t">เพศของผู้รับบริการ</div>
+    <div class="sec-s">เพื่อจัดผู้ให้บริการให้เหมาะสม (ชายนวดชาย หญิงนวดหญิง)</div>
+    <div class="gender-grid" id="genderGrid">
+      <div class="gender-opt" data-g="male" onclick="pickGender('male')">
+        <div class="g-ic">👨</div><div class="g-nm">ชาย</div>
+      </div>
+      <div class="gender-opt" data-g="female" onclick="pickGender('female')">
+        <div class="g-ic">👩</div><div class="g-nm">หญิง</div>
+      </div>
+      <div class="gender-opt" data-g="child" onclick="pickGender('child')">
+        <div class="g-ic">🧒</div><div class="g-nm">เด็ก</div><div class="g-sub">อายุไม่เกิน 12 ปี</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: คัดกรอง -->
+  <div class="sec" id="s3">
     <div class="sec-t">คัดกรองอาการเบื้องต้น</div>
     <div class="sec-s">ตอบคำถามเพื่อให้ผู้ให้บริการเตรียมตัวล่วงหน้า</div>
     <div id="screenBox"></div>
   </div>
 
-  <!-- STEP 3 -->
-  <div class="sec" id="s3">
+  <!-- STEP 4: เลือกวัน -->
+  <div class="sec" id="s4">
     <div class="sec-t">เลือกวันที่</div>
     <div class="sec-s">เลื่อนซ้าย-ขวาเพื่อเลือกวัน (จองล่วงหน้าได้ 7 วันทำการ ไม่รวมวันหยุด)</div>
     <div class="d-scroll" id="dateScroll"></div>
     <div id="dateDisplay" style="font-size:14px;color:var(--g500);text-align:center;margin-top:12px"></div>
   </div>
 
-  <!-- STEP 4 -->
-  <div class="sec" id="s4">
+  <!-- STEP 5: เลือกผู้ให้บริการ -->
+  <div class="sec" id="s5">
     <div class="sec-t">เลือกผู้ให้บริการ</div>
     <div class="sec-s" id="provSub">เลือกผู้ให้บริการที่ต้องการ</div>
     <div class="prov-list" id="provList"><div class="ld"><div class="sp"></div>กำลังโหลด...</div></div>
   </div>
 
-  <!-- STEP 5 -->
-  <div class="sec" id="s5">
+  <!-- STEP 6: เลือกเวลา -->
+  <div class="sec" id="s6">
     <div class="sec-t">เลือกเวลา</div>
     <div class="sec-s" id="slotSub">เลือกช่วงเวลาที่สะดวก</div>
     <div id="timeBox"><div class="ld"><div class="sp"></div>กำลังโหลด...</div></div>
   </div>
 
-  <!-- STEP 6 -->
-  <div class="sec" id="s6">
+  <!-- STEP 7: กรอกข้อมูล -->
+  <div class="sec" id="s7">
     <div class="sec-t">กรอกข้อมูลผู้รับบริการ</div>
     <div class="sec-s">กรุณากรอกข้อมูลเพื่อยืนยันการจอง</div>
+    <div class="notice-box">
+      <div style="font-weight:700;color:#92400E;margin-bottom:4px">⚠️ กรุณาให้ข้อมูลตามความเป็นจริง</div>
+      <div style="font-size:13px;color:#78350F;line-height:1.6">
+        • การจองนี้สำหรับตัวท่านเอง 1 สิทธิ์ต่อ 1 นัด<br>
+        • กรุณามาตามนัดด้วยตนเอง ห้ามให้ผู้อื่นมาแทน<br>
+        • หากไม่สามารถมาได้ กรุณายกเลิกล่วงหน้า<br>
+        • การจองเผื่อผู้อื่น หรือนัดแล้วไม่มา อาจมีผลต่อการจองครั้งต่อไป
+      </div>
+    </div>
     <div class="fg"><label class="fl">ชื่อ-สกุล <span class="req">*</span></label><input type="text" class="fi" id="fName" placeholder="กรอกชื่อ-สกุล"></div>
     <div class="fg"><label class="fl">HN (เลขประจำตัวผู้ป่วย)</label><input type="text" class="fi" id="fHn" placeholder="กรอก HN (ถ้ามี)"><div class="fn">ถ้าไม่มีหรือไม่ทราบ สามารถเว้นว่างได้</div></div>
     <div class="fg"><label class="fl">เบอร์โทรศัพท์ <span class="req">*</span></label><input type="tel" class="fi" id="fPhone" placeholder="0xx-xxx-xxxx"></div>
@@ -287,10 +321,10 @@
   </div><!-- end ttmBooking -->
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbw8b1iyu4V0m84WYROqoBzeR2R-Ke75iQ3tyJKOeBzIEZTYM015aAG27EXutjdOUmpS8g/exec';
-const STEPS=6;
+const API='https://script.google.com/macros/s/AKfycbzXCZF4t1x_3A9LMz3FyhiOPxbCMdMT4qg2tyLTcco_pfLYTBlz21SyiPa6C5K9zivETA/exec';
+const STEPS=7;
 let step=1;
-let S={services:[],dates:[],providers:[],slots:[],screenQs:[],insTypes:[],selSvc:null,selDate:null,selProv:null,selSlot:null,selIns:null,screening:{}};
+let S={services:[],dates:[],providers:[],slots:[],screenQs:[],insTypes:[],selSvc:null,selGender:null,selDate:null,selProv:null,selSlot:null,selIns:null,screening:{}};
 
 async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return(await fetch(u)).json()}
 async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
@@ -311,7 +345,20 @@ function renderServices(){
     return`<div class="svc" data-id="${s.id}" onclick="pickSvc('${s.id}')"><div class="ic">${s.icon}</div><div class="nm">${s.name}</div><div class="dur">${s.duration}</div>${tag}</div>`;
   }).join('');
 }
-function pickSvc(id){S.selSvc=S.services.find(s=>s.id===id);document.querySelectorAll('.svc').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));updBtn()}
+function pickSvc(id){
+  S.selSvc=S.services.find(s=>s.id===id);
+  document.querySelectorAll('.svc').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+  // ฟื้นฟูมารดาหลังคลอด → ล็อคเพศหญิงอัตโนมัติ
+  if(id==='postpartum'){S.selGender='female'}
+  else if(S.selGender==='female'&&S.selSvc&&id!=='postpartum'){/* คงค่าเดิม */}
+  updBtn();
+}
+
+function pickGender(g){
+  S.selGender=g;
+  document.querySelectorAll('.gender-opt').forEach(e=>e.classList.toggle('sel',e.dataset.g===g));
+  updBtn();
+}
 
 function renderScreening(){
   document.getElementById('screenBox').innerHTML=S.screenQs.map((q,i)=>{
@@ -331,16 +378,18 @@ function renderDates(){
 }
 function pickDate(ds){S.selDate=S.dates.find(d=>d.date===ds);S.selProv=null;S.selSlot=null;document.querySelectorAll('.d-card').forEach(e=>e.classList.toggle('sel',e.dataset.d===ds));document.getElementById('dateDisplay').textContent=S.selDate?S.selDate.label:'';updBtn()}
 
-async function renderProviders(){
+async function loadProviders(){
   const list=document.getElementById('provList'),sub=document.getElementById('provSub');
   if(S.selDate)sub.textContent=`${S.selDate.label} · เลือกผู้ให้บริการ`;
   list.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดผู้ให้บริการ...</div>';
   try{
-    const res=await apiGet('getScheduledProviders',{date:S.selDate.date,service_type:S.selSvc.id});
+    const res=await apiGet('getScheduledProviders',{date:S.selDate.date,service_type:S.selSvc.id,patient_gender:S.selGender||''});
     if(!res.success){list.innerHTML='<div class="err">'+(res.error||'เกิดข้อผิดพลาด')+'</div>';return}
     S.providers=res.providers||[];
     if(!S.providers.length){list.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีผู้ให้บริการในวันที่เลือก</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่น</div></div>';return}
-    list.innerHTML=S.providers.map(p=>{
+    // ปุ่มไม่ระบุคนนวด (คลินิกจัดให้)
+    const anyOption=`<div class="prov" data-id="any" onclick="pickProv('any')" style="border:2px dashed var(--sage)"><div class="prov-av" style="background:var(--sage)">🎲</div><div class="prov-info"><div class="prov-nm">ไม่ระบุ (คลินิกจัดให้)</div><div class="prov-ti">ระบบจะจัดผู้ให้บริการที่ว่างให้อัตโนมัติ</div></div><div class="prov-ck">✓</div></div>`;
+    list.innerHTML=anyOption+S.providers.map(p=>{
       const ini=p.name?p.name.substring(0,2):'??',col=p.color||'#8BA9A0',shifts=p.shift?p.shift.split(',').join(' · '):'';
       const isDoc=p.title&&p.title.includes('แพทย์แผนไทย')&&!p.title.includes('ผู้ช่วย');
       const badge=isDoc?'<span style="font-size:10px;background:#D4E4DF;color:#3D4D31;padding:2px 8px;border-radius:8px;margin-left:6px;font-weight:600">แพทย์แผนไทย</span>':'';
@@ -348,16 +397,32 @@ async function renderProviders(){
     }).join('');
   }catch(e){list.innerHTML='<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>'}
 }
-function pickProv(id){S.selProv=S.providers.find(p=>p.id===id);S.selSlot=null;document.querySelectorAll('.prov').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));updBtn()}
+function pickProv(id){
+  if(id==='any'){S.selProv={id:'any',name:'ไม่ระบุ (คลินิกจัดให้)'}}
+  else{S.selProv=S.providers.find(p=>p.id===id)}
+  S.selSlot=null;
+  document.querySelectorAll('.prov').forEach(e=>e.classList.toggle('sel',e.dataset.id===id));
+  updBtn();
+}
 
 async function loadSlots(){
   const box=document.getElementById('timeBox'),sub=document.getElementById('slotSub');
   sub.textContent=`${S.selProv.name} · ${S.selDate.label}`;
   box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดช่วงเวลาว่าง...</div>';
   try{
-    const res=await apiGet('getSlots',{date:S.selDate.date,provider_id:S.selProv.id,service_type:S.selSvc.id});
-    if(!res.success){box.innerHTML='<div class="err">'+res.error+'</div>';return}
-    S.slots=res.available||[];
+    let slots=[];
+    if(S.selProv.id==='any'){
+      // ไม่ระบุคนนวด → รวม slot ว่างจากทุกคน (unique ตามเวลา)
+      const results=await Promise.all(S.providers.map(p=>apiGet('getSlots',{date:S.selDate.date,provider_id:p.id,service_type:S.selSvc.id}).catch(()=>({success:false}))));
+      const slotMap={};
+      results.forEach(r=>{if(r.success&&r.available){r.available.forEach(s=>{if(!slotMap[s.slot_index])slotMap[s.slot_index]=s})}});
+      slots=Object.values(slotMap).sort((a,b)=>a.slot_index-b.slot_index);
+    }else{
+      const res=await apiGet('getSlots',{date:S.selDate.date,provider_id:S.selProv.id,service_type:S.selSvc.id});
+      if(!res.success){box.innerHTML='<div class="err">'+res.error+'</div>';return}
+      slots=res.available||[];
+    }
+    S.slots=slots;
     if(!S.slots.length){box.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีช่วงเวลาว่าง</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่นหรือผู้ให้บริการท่านอื่น</div></div>';return}
 
     // ล็อค slot ที่จอง 2 ชม. ไม่ได้ (ติดเวลาพัก/สิ้นสุดวัน)
@@ -391,29 +456,41 @@ function pickIns(id){
 function renderSummary(){
   renderInsurance();
   const insName=S.selIns?S.selIns.name:'ยังไม่ได้เลือก';
+  const genderMap={male:'ชาย',female:'หญิง',child:'เด็ก'};
+  const provName=S.selProv.id==='any'?'ไม่ระบุ (คลินิกจัดให้)':S.selProv.name;
   document.getElementById('sumBody').innerHTML=[
     ['บริการ',`${S.selSvc.icon} ${S.selSvc.name} (${S.selSvc.duration})`],
-    ['วันที่',S.selDate.label],['ผู้ให้บริการ',S.selProv.name],
+    ['เพศผู้รับบริการ',genderMap[S.selGender]||'-'],
+    ['วันที่',S.selDate.label],['ผู้ให้บริการ',provName],
     ['เวลา',`${safeTime(S.selSlot.time_start)} – ${safeTime(S.selSlot.time_end)}`],
     ['สิทธิ์การรักษา',insName],
   ].map(([l,v])=>`<div class="sum-r"><span class="sum-l">${l}</span><span class="sum-v">${v}</span></div>`).join('');
 }
 
-function goTo(s){step=s;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));
+function goTo(s){
+  // ฟื้นฟูมารดา → ข้ามขั้นตอนเลือกเพศ (step 2)
+  if(s===2&&S.selSvc&&S.selSvc.id==='postpartum'){S.selGender='female';s=step<2?3:1}
+  step=s;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));
   if(s<=STEPS)document.getElementById('s'+s).classList.add('on');
   document.querySelectorAll('.dot').forEach(d=>{const n=parseInt(d.dataset.s);d.classList.remove('on','ok');if(n===s)d.classList.add('on');else if(n<s)d.classList.add('ok')});
-  if(s===2)renderScreening();if(s===3)renderDates();if(s===4)renderProviders();if(s===5)loadSlots();if(s===6)renderSummary();
+  if(s===3)renderScreening();if(s===4)renderDates();if(s===5)loadProviders();if(s===6)loadSlots();if(s===7)renderSummary();
   updBtn();window.scrollTo(0,0)}
 function goNext(){if(step===STEPS){submitBooking();return}goTo(step+1)}
-function goBack(){if(step>1)goTo(step-1)}
+function goBack(){
+  if(step<=1)return;
+  let prev=step-1;
+  // ฟื้นฟูมารดา → ข้ามเพศตอนถอยหลังด้วย
+  if(prev===2&&S.selSvc&&S.selSvc.id==='postpartum')prev=1;
+  goTo(prev);
+}
 function updBtn(){
   const bn=document.getElementById('bNext'),bb=document.getElementById('bBack'),bar=document.getElementById('bbar');
   bb.classList.toggle('hidden',step<=1||step>STEPS);if(step>STEPS){bar.classList.add('hidden');return}bar.classList.remove('hidden');
-  const labels={1:'คัดกรองอาการ →',2:'เลือกวันที่ →',3:'เลือกผู้ให้บริการ →',4:'เลือกเวลา →',5:'กรอกข้อมูล →',6:'✅ ยืนยันจองคิว'};
+  const labels={1:'เลือกเพศ →',2:'คัดกรองอาการ →',3:'เลือกวันที่ →',4:'เลือกผู้ให้บริการ →',5:'เลือกเวลา →',6:'กรอกข้อมูล →',7:'✅ ยืนยันจองคิว'};
   bn.textContent=labels[step]||'ถัดไป →';
   let ok=false;
-  switch(step){case 1:ok=!!S.selSvc;break;case 2:ok=true;break;case 3:ok=!!S.selDate;break;case 4:ok=!!S.selProv;break;case 5:ok=!!S.selSlot;break;case 6:ok=true;break}
-  bn.disabled=!ok;bn.className=step===6?'btn btn-ok':'btn btn-p';
+  switch(step){case 1:ok=!!S.selSvc;break;case 2:ok=!!S.selGender;break;case 3:ok=true;break;case 4:ok=!!S.selDate;break;case 5:ok=!!S.selProv;break;case 6:ok=!!S.selSlot;break;case 7:ok=true;break}
+  bn.disabled=!ok;bn.className=step===7?'btn btn-ok':'btn btn-p';
 }
 
 async function submitBooking(){
@@ -425,8 +502,15 @@ async function submitBooking(){
   const bn=document.getElementById('bNext');bn.disabled=true;bn.textContent='⏳ กำลังจองคิว...';
   try{
     let lineUid='';if(typeof liff!=='undefined'&&liff.isLoggedIn()){try{lineUid=(await liff.getProfile()).userId||''}catch(e){}}
-    const res=await apiPost({action:'book',date:S.selDate.date,provider_id:S.selProv.id,slot_index:S.selSlot.slot_index,service_type:S.selSvc.id,patient_name:name,patient_hn:hn,patient_phone:phone,line_user_id:lineUid,booking_type:'online',notes:note,screening_data:S.screening,insurance_type:S.selIns.id});
-    if(res.success){showSuccess(res)}else{errEl.textContent=res.error||'เกิดข้อผิดพลาด';errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว'}
+    const res=await apiPost({action:'book',date:S.selDate.date,provider_id:S.selProv.id,slot_index:S.selSlot.slot_index,service_type:S.selSvc.id,patient_name:name,patient_hn:hn,patient_phone:phone,line_user_id:lineUid,booking_type:'online',notes:note,screening_data:S.screening,insurance_type:S.selIns.id,patient_gender:S.selGender||''});
+    if(res.success){showSuccess(res)}
+    else if(res.error==='DUPLICATE'){
+      // แสดงข้อความนัดซ้ำแบบเด่นชัด
+      let msg='⚠️ '+(res.message||'ท่านมีนัดอยู่แล้ว หากต้องการนัดเพิ่มกรุณาติดต่อเจ้าหน้าที่');
+      if(res.existing){msg+=`<br><br><b>นัดเดิมของท่าน:</b><br>📅 ${res.existing.date_thai}<br>🕐 ${res.existing.time_start} · ${res.existing.service_name}`;}
+      errEl.innerHTML=msg;errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว';
+    }
+    else{errEl.textContent=res.error||'เกิดข้อผิดพลาด';errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว'}
   }catch(e){errEl.textContent='เกิดข้อผิดพลาด: '+e.message;errEl.classList.remove('hidden');bn.disabled=false;bn.textContent='✅ ยืนยันจองคิว'}
 }
 function showSuccess(r){
