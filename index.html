@@ -282,12 +282,12 @@
     <div class="sec-t">กรอกข้อมูลผู้รับบริการ</div>
     <div class="sec-s">กรุณากรอกข้อมูลเพื่อยืนยันการจอง</div>
     <div class="notice-box">
-      <div style="font-weight:700;color:#92400E;margin-bottom:4px">⚠️ กรุณาให้ข้อมูลตามความเป็นจริง</div>
-      <div style="font-size:13px;color:#78350F;line-height:1.6">
-        • การจองนี้สำหรับตัวท่านเอง 1 สิทธิ์ต่อ 1 นัด<br>
-        • กรุณามาตามนัดด้วยตนเอง ห้ามให้ผู้อื่นมาแทน<br>
-        • หากไม่สามารถมาได้ กรุณายกเลิกล่วงหน้า<br>
-        • การจองเผื่อผู้อื่น หรือนัดแล้วไม่มา อาจมีผลต่อการจองครั้งต่อไป
+      <div style="font-weight:700;color:#92400E;margin-bottom:6px">⚠️ กรุณาให้ข้อมูลตามความเป็นจริง</div>
+      <div style="font-size:13px;color:#78350F;line-height:1.7">
+        • 1 ท่าน จองได้ 1 นัด ในช่วง 7 วัน หรือตามดุลพินิจของแพทย์แผนไทย<br>
+        • ผู้มารับบริการต้องตรงกับชื่อที่จองไว้ หากจองแทนผู้อื่น กรุณากรอกข้อมูลผู้มารับบริการจริง<br>
+        • หากไม่สะดวกมาตามนัด กรุณายกเลิกล่วงหน้า เพื่อเปิดคิวให้ผู้อื่น<br>
+        • การนัดแล้วไม่มาโดยไม่แจ้งล่วงหน้า อาจมีผลต่อการจองครั้งต่อไป
       </div>
     </div>
     <div class="fg"><label class="fl">ชื่อ-สกุล <span class="req">*</span></label><input type="text" class="fi" id="fName" placeholder="กรอกชื่อ-สกุล"></div>
@@ -326,8 +326,8 @@ const STEPS=7;
 let step=1;
 let S={services:[],dates:[],providers:[],slots:[],screenQs:[],insTypes:[],selSvc:null,selGender:null,selDate:null,selProv:null,selSlot:null,selIns:null,screening:{}};
 
-async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return(await fetch(u)).json()}
-async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
+async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{method:'GET',redirect:'follow'});return r.json()}
+async function apiPost(b){const r=await fetch(API,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)});return r.json()}
 function safeTime(v){if(!v)return'00:00';const s=String(v);if(s.includes('T')){try{const d=new Date(s);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')}catch(e){}}return s}
 
 async function init(){
@@ -336,7 +336,18 @@ async function init(){
     if(svcR.success)S.services=svcR.services;if(dateR.success)S.dates=dateR.dates;if(scrR.success)S.screenQs=scrR.questions;
     if(insR.success)S.insTypes=insR.insurance_types;
     renderServices();
-  }catch(e){console.error('Init:',e)}
+  }catch(e){
+    console.error('Init:',e);
+    document.getElementById('svcGrid').innerHTML=`<div style="grid-column:1/-1;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:12px;padding:20px;text-align:center">
+      <div style="font-size:15px;font-weight:700;color:#B91C1C;margin-bottom:8px">⚠️ โหลดข้อมูลไม่สำเร็จ</div>
+      <div style="font-size:13px;color:#7F1D1D;line-height:1.6">
+        อาจเกิดจากตัวปิดโฆษณา (Ad-blocker) บล็อกการเชื่อมต่อ<br>
+        กรุณาปิด Ad-blocker สำหรับเว็บนี้ หรือลองเปิดใน Chrome/Edge<br>
+        แล้วกดรีเฟรช (Ctrl+Shift+R)
+      </div>
+      <button onclick="init()" style="margin-top:12px;padding:10px 24px;background:var(--forest);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">🔄 ลองอีกครั้ง</button>
+    </div>`;
+  }
 }
 
 function renderServices(){
@@ -386,7 +397,7 @@ async function loadProviders(){
     const res=await apiGet('getScheduledProviders',{date:S.selDate.date,service_type:S.selSvc.id,patient_gender:S.selGender||''});
     if(!res.success){list.innerHTML='<div class="err">'+(res.error||'เกิดข้อผิดพลาด')+'</div>';return}
     S.providers=res.providers||[];
-    if(!S.providers.length){list.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีผู้ให้บริการในวันที่เลือก</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่น</div></div>';return}
+    if(!S.providers.length){list.innerHTML='<div class="empty"><div class="ic">😔</div><div>ไม่มีผู้ให้บริการที่ให้บริการนี้ในวันที่เลือก</div><div style="font-size:13px;color:var(--g400);margin-top:4px">กรุณาเลือกวันอื่น หรือติดต่อเจ้าหน้าที่</div></div>';return}
     // ปุ่มไม่ระบุคนนวด (คลินิกจัดให้)
     const anyOption=`<div class="prov" data-id="any" onclick="pickProv('any')" style="border:2px dashed var(--sage)"><div class="prov-av" style="background:var(--sage)">🎲</div><div class="prov-info"><div class="prov-nm">ไม่ระบุ (คลินิกจัดให้)</div><div class="prov-ti">ระบบจะจัดผู้ให้บริการที่ว่างให้อัตโนมัติ</div></div><div class="prov-ck">✓</div></div>`;
     list.innerHTML=anyOption+S.providers.map(p=>{
