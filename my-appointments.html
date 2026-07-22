@@ -156,6 +156,10 @@ function safeTime(v){
   if(s.includes('T')){try{const d=new Date(s);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')}catch(e){}}
   return s;
 }
+// Google Sheets ตัด 0 นำหน้าเบอร์โทรออก → ต้อง normalize ก่อนเทียบ
+function normPhone(v){
+  return String(v||'').replace(/[^0-9]/g,'').replace(/^0+/,'');
+}
 
 async function doSearch() {
   const name = document.getElementById('sName').value.trim();
@@ -201,16 +205,14 @@ async function doSearch() {
     } else if (name && phone && !hn) {
       // ค้นหาด้วย ชื่อ+เบอร์
       const nameLower = name.toLowerCase();
-      const phoneClean = phone.replace(/[- ]/g, '');
+      const phoneNorm = normPhone(phone);
       ttmBookings = ttmBookings.filter(b => {
         const bName = String(b.patient_name || '').toLowerCase();
-        const bPhone = String(b.patient_phone || '').replace(/[- ]/g, '');
-        return bName.includes(nameLower) && bPhone.includes(phoneClean);
+        return bName.includes(nameLower) && normPhone(b.patient_phone) === phoneNorm;
       });
       tcmBookings = tcmBookings.filter(b => {
         const bName = String(b.patient_name || '').toLowerCase();
-        const bPhone = String(b.patient_phone || '').replace(/[- ]/g, '');
-        return bName.includes(nameLower) && bPhone.includes(phoneClean);
+        return bName.includes(nameLower) && normPhone(b.patient_phone) === phoneNorm;
       });
     } else if (name && hn) {
       // ค้นหาด้วย ชื่อ+HN
