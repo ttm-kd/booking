@@ -80,6 +80,11 @@
     .td-booked{background:#E1F5EE!important}
     .td-walkin{background:#FFF7ED!important}
     .td-empty{background:#fff}
+    .td-noshift{background:repeating-linear-gradient(45deg,#F3F1ED,#F3F1ED 6px,#E9E6DF 6px,#E9E6DF 12px);border:1px solid var(--g200)}
+    .td-free{background:#fff;border:1px solid var(--g200);cursor:pointer;text-align:center;vertical-align:middle;transition:background .15s}
+    .td-free:hover{background:var(--sage-lt)}
+    .free-plus{color:var(--g300);font-size:18px;font-weight:700;line-height:1}
+    .td-free:hover .free-plus{color:var(--forest)}
     .slot-name{font-weight:700;color:var(--g800);display:block;margin-bottom:1px}
     .slot-svc{font-size:10px;color:var(--forest);display:block}
     .slot-ins{font-size:10px;color:var(--g400);display:block}
@@ -142,11 +147,9 @@
 
   <div class="tabs">
     <div class="tab on" data-t="queue" onclick="switchTab('queue')">📋 ดูคิว <span class="badge" id="qBadge">0</span></div>
-    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหา</div>
-    <div class="tab" data-t="walkin" onclick="switchTab('walkin')">🚶 Walk-in</div>
-    <div class="tab" data-t="schedule" onclick="switchTab('schedule')">📅 ตารางเวร</div>
     <div class="tab" data-t="overview" onclick="switchTab('overview')">🗓️ คิวว่าง 7 วัน</div>
     <div class="tab" data-t="finder" onclick="switchTab('finder')">🔎 หาคิวว่าง</div>
+    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหา</div>
   </div>
 
   <!-- ===== PANEL: คิว ===== -->
@@ -190,34 +193,6 @@
     <div id="searchResults"></div>
   </div>
 
-  <!-- ===== PANEL: Walk-in ===== -->
-  <div class="panel" id="pWalkin">
-    <div class="wi-section">
-      <div class="wi-title">🚶 เพิ่มคิว Walk-in</div>
-      <div class="fg"><label class="fl">ประเภทบริการ *</label>
-        <select class="fi" id="wiSvc"><option value="">-- เลือกบริการ --</option></select></div>
-      <div class="fg"><label class="fl">ผู้ให้บริการ *</label>
-        <select class="fi" id="wiProv"><option value="">-- เลือกผู้ให้บริการ --</option></select></div>
-      <div class="fg"><label class="fl">Slot เวลา *</label>
-        <select class="fi" id="wiSlot"><option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option></select></div>
-      <div class="fg"><label class="fl">ชื่อ-สกุลผู้ป่วย *</label>
-        <input type="text" class="fi" id="wiName" placeholder="กรอกชื่อ-สกุล"></div>
-      <div class="fg"><label class="fl">HN</label>
-        <input type="text" class="fi" id="wiHn" placeholder="กรอก HN (ถ้ามี)"></div>
-      <div class="fg"><label class="fl">เบอร์โทร</label>
-        <input type="tel" class="fi" id="wiPhone" placeholder="0xx-xxx-xxxx"></div>
-      <div class="fg"><label class="fl">หมายเหตุ</label>
-        <input type="text" class="fi" id="wiNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
-      <div id="wiErr" class="err hidden"></div>
-      <button class="btn btn-o" id="wiBtn" onclick="submitWalkin()">🚶 เพิ่ม Walk-in</button>
-    </div>
-  </div>
-
-  <!-- ===== PANEL: ตารางเวร ===== -->
-  <div class="panel" id="pSchedule">
-    <div id="schList"><div class="ld"><div class="sp"></div>กำลังโหลดตารางเวร...</div></div>
-  </div>
-
   <!-- PANEL: คิวว่าง 7 วัน (ภาพรวม) -->
   <div class="panel" id="pOverview">
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
@@ -253,6 +228,31 @@
       <button class="modal-close" onclick="document.getElementById('modal').classList.add('hidden')">&times;</button>
       <div class="modal-t" id="modalTitle">รายละเอียดการจอง</div>
       <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: จองคิวด่วน -->
+  <div class="modal-bg hidden" id="qbModal" onclick="closeQuickBook(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="document.getElementById('qbModal').classList.add('hidden')">&times;</button>
+      <div class="modal-t">➕ จองคิว</div>
+      <div id="qbInfo" style="background:var(--sage-lt);border-radius:var(--rs);padding:12px 14px;margin-bottom:14px;font-size:14px;line-height:1.7;color:var(--forest-dk)"></div>
+      <div class="fg"><label class="fl">ประเภทบริการ *</label>
+        <select class="fi" id="qbSvc" onchange="qbCheck2hr()"></select>
+        <div id="qbWarn" class="hidden" style="font-size:12px;color:var(--red);margin-top:4px"></div>
+      </div>
+      <div class="fg"><label class="fl">ชื่อ-สกุลผู้ป่วย *</label>
+        <input type="text" class="fi" id="qbName" placeholder="กรอกชื่อ-สกุล"></div>
+      <div class="fg"><label class="fl">HN</label>
+        <input type="text" class="fi" id="qbHn" placeholder="กรอก HN (ถ้ามี)"></div>
+      <div class="fg"><label class="fl">เบอร์โทร</label>
+        <input type="tel" class="fi" id="qbPhone" placeholder="0xx-xxx-xxxx"></div>
+      <div class="fg"><label class="fl">สิทธิ์การรักษา</label>
+        <select class="fi" id="qbIns"></select></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label>
+        <input type="text" class="fi" id="qbNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
+      <div id="qbErr" class="err hidden"></div>
+      <button class="btn btn-p" id="qbBtn" onclick="submitQuickBook()" style="width:100%">✅ ยืนยันจองคิว</button>
     </div>
   </div>
 
@@ -304,17 +304,10 @@ async function init() {
   // Load services
   try {
     const svcR = await apiGet('getServiceTypes');
-    if (svcR.success) {
-      services = svcR.services;
-      const sel = document.getElementById('wiSvc');
-      services.forEach(s => {
-        sel.innerHTML += `<option value="${s.id}">${s.icon} ${s.name} (${s.duration})</option>`;
-      });
-    }
+    if (svcR.success) services = svcR.services;
   } catch(e) { console.error(e); }
 
   loadQueue();
-  loadSchedule();
 }
 
 function formatThaiDate(dateStr) {
@@ -415,16 +408,16 @@ function renderQueue(bookings) {
 
   // กำหนดช่วงเวลา
   const slotsIn = [
-    {start:'09:00',end:'10:00',label:'09:00-10:00'},
-    {start:'10:00',end:'11:00',label:'10:00-11:00'},
-    {start:'11:00',end:'12:00',label:'11:00-12:00'},
-    {start:'13:30',end:'14:30',label:'13:30-14:30'},
-    {start:'14:30',end:'15:30',label:'14:30-15:30'},
+    {index:1,start:'09:00',end:'10:00',label:'09:00-10:00',period:'เช้า'},
+    {index:2,start:'10:00',end:'11:00',label:'10:00-11:00',period:'เช้า'},
+    {index:3,start:'11:00',end:'12:00',label:'11:00-12:00',period:'เช้า'},
+    {index:4,start:'13:30',end:'14:30',label:'13:30-14:30',period:'บ่าย'},
+    {index:5,start:'14:30',end:'15:30',label:'14:30-15:30',period:'บ่าย'},
   ];
   const slotsOT = [
-    {start:'16:30',end:'17:30',label:'16:30-17:30'},
-    {start:'17:30',end:'18:30',label:'17:30-18:30'},
-    {start:'19:00',end:'20:00',label:'19:00-20:00'},
+    {index:6,start:'16:30',end:'17:30',label:'16:30-17:30',period:'นอกเวลาราชการ'},
+    {index:7,start:'17:30',end:'18:30',label:'17:30-18:30',period:'นอกเวลาราชการ'},
+    {index:8,start:'19:00',end:'20:00',label:'19:00-20:00',period:'นอกเวลาราชการ'},
   ];
   const allSlots = [...slotsIn, ...slotsOT];
   const insMap = {uc:'UC',social_security:'ปกส.',government:'ขรก.',cash:'จ่ายเอง',prb:'พรบ.',other:'อื่นๆ'};
@@ -446,11 +439,15 @@ function renderQueue(bookings) {
   html += '</tr>';
 
   // Data rows: ผู้ให้บริการแต่ละคน
+  const dateStr = document.getElementById('queueDate').value || todayStr;
   todayProviders.forEach(prov => {
     html += `<tr><td class="td-name">${prov.name}</td>`;
+    const shift = String(prov.shift || '');
 
     allSlots.forEach(slot => {
-      // หา booking ที่ตรงกับ provider + เวลานี้
+      // เช็คว่าคนนี้เข้าเวรช่วงนี้หรือไม่
+      const onShift = shift.includes(slot.period);
+
       const booking = bookings.find(b =>
         b.provider_id === prov.id &&
         safeTime(b.time_start) === slot.start
@@ -477,8 +474,11 @@ function renderQueue(bookings) {
         </td>`;
       } else if (booking2hr) {
         html += `<td class="td-slot td-booked" style="opacity:.5;text-align:center;font-size:11px;color:var(--g400)" onclick="viewBooking('${booking2hr.booking_id}')">⟵ ต่อเนื่อง</td>`;
+      } else if (!onShift) {
+        html += '<td class="td-noshift"></td>';
       } else {
-        html += '<td class="td-slot td-empty"></td>';
+        const safeName = String(prov.name).replace(/'/g, "\\'");
+        html += `<td class="td-free" onclick="openQuickBook('${prov.id}','${safeName}',${slot.index},'${slot.start}','${slot.end}')"><span class="free-plus">+</span></td>`;
       }
     });
 
@@ -489,7 +489,7 @@ function renderQueue(bookings) {
 
   // สรุปจำนวน
   html += `<div style="font-size:12px;color:var(--g400);text-align:center;margin-top:8px">
-    🟢 สีเขียว = จองออนไลน์ &nbsp; 🟠 สีส้ม = Walk-in &nbsp; ⬜ ว่าง &nbsp;|&nbsp; กดที่ช่องเพื่อดูรายละเอียด
+    🟢 จองออนไลน์ &nbsp; 🟠 Walk-in &nbsp; ⬜ ว่าง (กดเพื่อจอง) &nbsp; ▨ ไม่มีเวร
   </div>`;
 
   list.innerHTML = html;
@@ -599,160 +599,6 @@ async function cancelBooking(bid) {
       alert('เกิดข้อผิดพลาด: ' + res.error);
     }
   } catch(e) { alert('Error: ' + e.message); }
-}
-
-// ============================================================
-// TAB: Walk-in
-// ============================================================
-document.getElementById('wiSvc').addEventListener('change', loadWalkinProviders);
-document.getElementById('wiProv').addEventListener('change', loadWalkinSlots);
-
-async function loadWalkinProviders() {
-  const svcId = document.getElementById('wiSvc').value;
-  const provSel = document.getElementById('wiProv');
-  const slotSel = document.getElementById('wiSlot');
-  provSel.innerHTML = '<option value="">-- เลือกผู้ให้บริการ --</option>';
-  slotSel.innerHTML = '<option value="">-- เลือกผู้ให้บริการก่อน --</option>';
-
-  if (!svcId) return;
-
-  try {
-    const res = await apiGet('getScheduledProviders', { date: todayStr, service_type: svcId });
-    if (res.success && res.providers) {
-      res.providers.forEach(p => {
-        provSel.innerHTML += `<option value="${p.id}">${p.name} (${p.title})</option>`;
-      });
-    }
-  } catch(e) { console.error(e); }
-}
-
-async function loadWalkinSlots() {
-  const svcId = document.getElementById('wiSvc').value;
-  const provId = document.getElementById('wiProv').value;
-  const slotSel = document.getElementById('wiSlot');
-  slotSel.innerHTML = '<option value="">กำลังโหลด...</option>';
-
-  if (!svcId || !provId) {
-    slotSel.innerHTML = '<option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option>';
-    return;
-  }
-
-  try {
-    const res = await apiGet('getSlots', { date: todayStr, provider_id: provId, service_type: svcId });
-    if (res.success && res.available) {
-      slotSel.innerHTML = '<option value="">-- เลือกเวลา --</option>';
-      if (res.available.length === 0) {
-        slotSel.innerHTML = '<option value="">❌ ไม่มี slot ว่าง</option>';
-        return;
-      }
-      res.available.forEach(s => {
-        slotSel.innerHTML += `<option value="${s.slot_index}">${safeTime(s.time_start)} – ${safeTime(s.time_end)} (${s.period})</option>`;
-      });
-    }
-  } catch(e) { console.error(e); }
-}
-
-async function submitWalkin() {
-  const svcId = document.getElementById('wiSvc').value;
-  const provId = document.getElementById('wiProv').value;
-  const slotIdx = document.getElementById('wiSlot').value;
-  const name = document.getElementById('wiName').value.trim();
-  const hn = document.getElementById('wiHn').value.trim();
-  const phone = document.getElementById('wiPhone').value.trim();
-  const note = document.getElementById('wiNote').value.trim();
-  const errEl = document.getElementById('wiErr');
-
-  if (!svcId) { errEl.textContent='เลือกประเภทบริการ'; errEl.classList.remove('hidden'); return; }
-  if (!provId) { errEl.textContent='เลือกผู้ให้บริการ'; errEl.classList.remove('hidden'); return; }
-  if (!slotIdx) { errEl.textContent='เลือกเวลา'; errEl.classList.remove('hidden'); return; }
-  if (!name) { errEl.textContent='กรอกชื่อผู้ป่วย'; errEl.classList.remove('hidden'); return; }
-  errEl.classList.add('hidden');
-
-  const btn = document.getElementById('wiBtn');
-  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
-
-  try {
-    const res = await apiPost({
-      action: 'walkin',
-      provider_id: provId,
-      slot_index: parseInt(slotIdx),
-      service_type: svcId,
-      patient_name: name,
-      patient_hn: hn,
-      patient_phone: phone,
-      notes: note,
-    });
-
-    if (res.success) {
-      showToast(`✅ เพิ่ม walk-in สำเร็จ: ${res.booking_id}`);
-      // Reset form
-      document.getElementById('wiSvc').value = '';
-      document.getElementById('wiProv').innerHTML = '<option value="">-- เลือกผู้ให้บริการ --</option>';
-      document.getElementById('wiSlot').innerHTML = '<option value="">-- เลือกบริการและผู้ให้บริการก่อน --</option>';
-      document.getElementById('wiName').value = '';
-      document.getElementById('wiHn').value = '';
-      document.getElementById('wiPhone').value = '';
-      document.getElementById('wiNote').value = '';
-      // Refresh queue
-      loadQueue();
-      switchTab('queue');
-    } else {
-      errEl.textContent = res.error || 'เกิดข้อผิดพลาด';
-      errEl.classList.remove('hidden');
-    }
-  } catch(e) {
-    errEl.textContent = 'Error: ' + e.message;
-    errEl.classList.remove('hidden');
-  }
-
-  btn.disabled = false; btn.textContent = '🚶 เพิ่ม Walk-in';
-}
-
-// ============================================================
-// TAB: ตารางเวร
-// ============================================================
-async function loadSchedule() {
-  const list = document.getElementById('schList');
-  list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดตารางเวร...</div>';
-
-  try {
-    const res = await apiGet('getDates');
-    if (!res.success) { list.innerHTML = '<div class="err">'+res.error+'</div>'; return; }
-
-    const dates = res.dates || [];
-    let html = '';
-
-    for (const d of dates) {
-      // Load providers for each date
-      let provHtml = '';
-      try {
-        const pRes = await apiGet('getScheduledProviders', { date: d.date, service_type: 'massage_1hr' });
-        if (pRes.success && pRes.providers) {
-          provHtml = pRes.providers.map(p => {
-            const isDoc = p.title && p.title.includes('แพทย์แผนไทย') && !p.title.includes('ผู้ช่วย');
-            const shifts = p.shift ? p.shift.split(',').map(s=>s.trim()).join(' · ') : '';
-            return `<div class="sch-chip${isDoc?' doctor':''}">
-              <div class="sch-dot" style="background:${p.color||'#94A3B8'}"></div>
-              ${p.name} <span style="font-size:9px;color:var(--g400)">(${shifts})</span>
-            </div>`;
-          }).join('');
-        }
-      } catch(e) {}
-
-      const isToday = d.date === todayStr;
-      html += `<div class="sch-day" ${isToday?'style="border-color:var(--pri);border-width:2px"':''}>
-        <div class="sch-date">
-          <span>${isToday?'📌 ':'' }${d.label}</span>
-          <span class="sch-count">${d.staff_count} คน</span>
-        </div>
-        <div class="sch-staff">${provHtml || '<span style="color:var(--g400);font-size:12px">ยังไม่มีตารางเวร</span>'}</div>
-      </div>`;
-    }
-
-    list.innerHTML = html;
-  } catch(e) {
-    list.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>';
-  }
 }
 
 // ============================================================
@@ -920,9 +766,98 @@ async function findSlots(reset){
   }catch(e){box.innerHTML='<div class="empty">เกิดข้อผิดพลาด: '+e.message+'</div>'}
 }
 
+let qbCtx = null;
+const INS_LIST = [
+  {id:'uc',name:'บัตรทอง (UC/30 บาท)'},
+  {id:'social_security',name:'ประกันสังคม'},
+  {id:'government',name:'ข้าราชการ/จ่ายตรง'},
+  {id:'cash',name:'ชำระเงินเอง'},
+  {id:'prb',name:'พ.ร.บ.'},
+  {id:'other',name:'อื่นๆ'},
+];
+const BLOCKED_2HR = ['11:00','14:30','17:30','19:00'];
+
+function openQuickBook(provId, provName, slotIndex, timeStart, timeEnd){
+  const dateStr = document.getElementById('queueDate').value || todayStr;
+  qbCtx = {provId, provName, slotIndex, timeStart, timeEnd, dateStr};
+
+  document.getElementById('qbInfo').innerHTML =
+    `📅 ${formatThaiDate(dateStr)}<br>👨‍⚕️ ${provName}<br>🕐 ${timeStart} – ${timeEnd}`;
+
+  const svcSel = document.getElementById('qbSvc');
+  svcSel.innerHTML = services.map(s=>`<option value="${s.id}" data-slots="${s.slots}">${s.icon} ${s.name} (${s.duration})</option>`).join('');
+  const insSel = document.getElementById('qbIns');
+  insSel.innerHTML = INS_LIST.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+
+  ['qbName','qbHn','qbPhone','qbNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qbErr').classList.add('hidden');
+  qbCheck2hr();
+  document.getElementById('qbModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('qbName').focus(), 100);
+}
+
+function closeQuickBook(e){
+  if(e.target.id==='qbModal') document.getElementById('qbModal').classList.add('hidden');
+}
+
+function qbCheck2hr(){
+  const sel = document.getElementById('qbSvc');
+  const opt = sel.options[sel.selectedIndex];
+  const warn = document.getElementById('qbWarn');
+  const btn = document.getElementById('qbBtn');
+  if(!opt || !qbCtx){warn.classList.add('hidden');return}
+  const slots = Number(opt.dataset.slots || 1);
+  if(slots > 1 && BLOCKED_2HR.includes(qbCtx.timeStart)){
+    warn.textContent = '⚠️ ช่วงเวลานี้จองบริการ 2 ชั่วโมงไม่ได้ เพราะติดเวลาพัก';
+    warn.classList.remove('hidden');
+    btn.disabled = true; btn.style.opacity = '.4';
+  } else {
+    warn.classList.add('hidden');
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+async function submitQuickBook(){
+  if(!qbCtx) return;
+  const name = document.getElementById('qbName').value.trim();
+  const errEl = document.getElementById('qbErr');
+  if(!name){errEl.textContent='กรุณากรอกชื่อ-สกุล';errEl.classList.remove('hidden');return}
+  errEl.classList.add('hidden');
+
+  const btn = document.getElementById('qbBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังจอง...';
+  try{
+    const res = await apiPost({
+      action: 'book',
+      date: qbCtx.dateStr,
+      provider_id: qbCtx.provId,
+      slot_index: qbCtx.slotIndex,
+      service_type: document.getElementById('qbSvc').value,
+      patient_name: name,
+      patient_hn: document.getElementById('qbHn').value.trim(),
+      patient_phone: document.getElementById('qbPhone').value.trim(),
+      insurance_type: document.getElementById('qbIns').value,
+      notes: document.getElementById('qbNote').value.trim(),
+      booking_type: 'walk-in',
+    });
+    if(res.success){
+      document.getElementById('qbModal').classList.add('hidden');
+      showToast('✅ จองคิวสำเร็จ');
+      loadQueue();
+    } else {
+      errEl.textContent = res.message || res.error || 'เกิดข้อผิดพลาด';
+      errEl.classList.remove('hidden');
+    }
+  }catch(e){
+    errEl.textContent = 'เกิดข้อผิดพลาด: ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+  btn.disabled = false; btn.textContent = '✅ ยืนยันจองคิว';
+}
+
 function switchTab(t) {
   document.querySelectorAll('.tab').forEach(e => e.classList.toggle('on', e.dataset.t === t));
-  ['Queue','Search','Walkin','Schedule','Overview','Finder'].forEach(p => {
+  ['Queue','Search','Overview','Finder'].forEach(p => {
     const el = document.getElementById('p'+p);
     if(el) el.classList.toggle('on', p.toLowerCase() === t);
   });
