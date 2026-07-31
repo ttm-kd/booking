@@ -310,6 +310,16 @@ async function cancelMyBooking(bid, type) {
 document.querySelectorAll('.fi').forEach(el => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 });
+
+// เปิดจาก QR ในใบนัด (?id=BK-... หรือ ?id=TCM-...) → ค้นหาอัตโนมัติ
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (id) {
+    document.getElementById('sBookingId').value = id;
+    doSearch();
+  }
+})();
 </script>
 </body>
 </html>

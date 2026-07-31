@@ -315,6 +315,10 @@
       <div class="bid" id="okBid"></div>
       <div class="sum"><div class="sum-h">📋 รายละเอียดการจอง</div><div class="sum-b" id="okSum"></div></div>
       <div class="warn">⚠️ กรุณามาถึงก่อนเวลานัด 15 นาที พร้อมบัตรประชาชน<br>📍 คลินิกแพทย์แผนไทยฯ โรงพยาบาลควนโดน</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+        <a id="okViewLink" href="#" style="display:block;text-align:center;padding:14px;background:var(--forest);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px">📋 ดูนัด / ยกเลิกนัดของฉัน</a>
+        <a href="./" style="display:block;text-align:center;padding:12px;background:var(--g100);color:var(--g600);border-radius:12px;text-decoration:none;font-weight:600;font-size:14px">🏠 กลับหน้าหลัก</a>
+      </div>
     </div>
   </div>
 
@@ -531,6 +535,8 @@ async function submitBooking(){
 function showSuccess(r){
   step=STEPS+1;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));document.getElementById('sOk').classList.add('on');document.getElementById('bbar').classList.add('hidden');
   document.getElementById('okBid').textContent=r.booking_id||'';
+  const viewLink=document.getElementById('okViewLink');
+  if(viewLink&&r.booking_id)viewLink.href='my-appointments.html?id='+encodeURIComponent(r.booking_id);
   const insName=S.selIns?S.selIns.name:'-';
   document.getElementById('okSum').innerHTML=[
     ['บริการ',`${S.selSvc.icon} ${S.selSvc.name}`],['วันที่',r.date_thai||S.selDate.label],['ผู้ให้บริการ',r.provider_name||S.selProv.name],

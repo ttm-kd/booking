@@ -129,7 +129,10 @@
       <h2>จองคิวสำเร็จ!</h2>
       <div class="ok-bid" id="okBid"></div>
       <div class="sum"><div class="sum-h">📋 รายละเอียดการจอง</div><div class="sum-b" id="okSum"></div></div>
-      <a href="index.html" class="btn btn-o" style="display:inline-block;text-decoration:none;margin-top:12px;flex:none;padding:12px 24px">← กลับหน้าหลัก</a>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+        <a id="okViewLink" href="#" style="display:block;text-align:center;padding:14px;background:var(--pri);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px">📋 ดูนัด / ยกเลิกนัดของฉัน</a>
+        <a href="index.html" style="display:block;text-align:center;padding:12px;background:var(--g100);color:var(--g600);border-radius:12px;text-decoration:none;font-weight:600;font-size:14px">🏠 กลับหน้าหลัก</a>
+      </div>
     </div>
   </div>
   </div>
@@ -266,6 +269,8 @@ async function submitBooking(){
 function showSuccess(r){
   step=STEPS+1;document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));document.getElementById('sOk').classList.add('on');document.getElementById('bbar').classList.add('hidden');
   document.getElementById('okBid').textContent='รหัสนัด: '+r.booking_id;
+  const vl=document.getElementById('okViewLink');
+  if(vl&&r.booking_id)vl.href='my-appointments.html?id='+encodeURIComponent(r.booking_id);
   const insName=S.selIns?S.selIns.name:'-';
   document.getElementById('okSum').innerHTML=[
     ['บริการ',`${S.selSvc.icon} ${S.selSvc.name}`],['วันที่',r.date_thai||S.selDate.label],

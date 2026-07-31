@@ -891,7 +891,7 @@ function printAppointment(bid) {
   const insMap = {'uc':'บัตรทอง (UC/30 บาท)','social_security':'ประกันสังคม','government':'ข้าราชการ/จ่ายตรง','cash':'ชำระเงินเอง','prb':'พ.ร.บ.','other':'อื่นๆ'};
   const insName = insMap[b.insurance_type] || b.insurance_type || '-';
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(b.booking_id)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent('https://ttm-kd.github.io/booking/my-appointments.html?id=' + b.booking_id)}`;
 
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`<!DOCTYPE html>
@@ -947,7 +947,7 @@ function printAppointment(bid) {
     <div class="row"><span class="label">สิทธิ์การรักษา</span><span class="value">${insName}</span></div>
     <div class="qr-section">
       <img src="${qrUrl}" alt="QR Code">
-      <p>สแกน QR Code เพื่อตรวจสอบนัดหมาย</p>
+      <p>สแกนเพื่อดูหรือยกเลิกนัดหมาย</p>
     </div>
     <div class="note">⚠️ กรุณามาถึงก่อนเวลานัด 15 นาที พร้อมบัตรประชาชน<br>📍 คลินิกแพทย์แผนไทยฯ โรงพยาบาลควนโดน จ.สตูล</div>
     <div class="footer">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} | ระบบจองคิวออนไลน์ v2.0</div>
