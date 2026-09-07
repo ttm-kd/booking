@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รวมลิงก์ระบบนัดคิว — คลินิกแพทย์แผนไทยฯ รพ.ควนโดน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Chonburi&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --thai:#4A6B3E;--thai-dk:#2F4A26;--thai-lt:#EAF0E3;--thai-tint:#F4F8EF;
+    --cn:#8B4513;--cn-lt:#F5E9DC;
+    --blue:#1E5F8C;--blue-lt:#E6F0F7;
+    --gold:#C99A2E;--gold-lt:#FBF3DD;
+    --paper:#FBF9F4;--card:#fff;--ink:#2A2724;--ink-soft:#5C574F;--muted:#928B7E;--line:#E8E3D8;
+  }
+  body{font-family:'Sarabun',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;padding-bottom:40px}
+  .wrap{max-width:600px;margin:0 auto;padding:16px}
+
+  .hero{background:linear-gradient(155deg,var(--thai-dk),var(--thai));border-radius:20px;padding:26px 22px;color:#fff;position:relative;overflow:hidden;margin-bottom:22px}
+  .hero::after{content:"";position:absolute;bottom:-70px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+  .hero-mark{font-size:34px;margin-bottom:6px}
+  .hero h1{font-family:'Chonburi',serif;font-size:25px;font-weight:400;line-height:1.3;position:relative;z-index:2}
+  .hero p{font-size:13.5px;color:rgba(255,255,255,.78);margin-top:4px}
+
+  .sec-label{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:var(--ink-soft);margin:26px 4px 12px;text-transform:uppercase;letter-spacing:.5px}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sec-label:first-of-type{margin-top:4px}
+
+  .link{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:10px;text-decoration:none;color:inherit;transition:transform .12s,box-shadow .12s}
+  .link:active{transform:scale(.985)}
+  .link:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .link-ic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .link-body{flex:1;min-width:0}
+  .link-t{font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.3}
+  .link-d{font-size:13px;color:var(--muted);margin-top:2px}
+  .link-arr{color:var(--muted);font-size:19px;flex-shrink:0}
+
+  .i-thai{background:var(--thai-lt);color:var(--thai-dk)}
+  .i-cn{background:var(--cn-lt);color:var(--cn)}
+  .i-blue{background:var(--blue-lt);color:var(--blue)}
+  .i-gold{background:var(--gold-lt);color:#7A5A11}
+
+  .staff-note{background:var(--gold-lt);border:1px solid #EAD9A8;border-radius:12px;padding:12px 14px;font-size:13px;color:#7A5A11;line-height:1.6;margin-bottom:14px;display:flex;gap:9px}
+
+  .tip{background:var(--thai-tint);border:1px solid #D6E3CB;border-radius:14px;padding:16px;margin-top:24px;font-size:13.5px;color:var(--thai-dk);line-height:1.7}
+  .tip b{display:block;margin-bottom:5px;font-size:14.5px}
+
+  .foot{text-align:center;font-size:12px;color:var(--muted);padding:26px 0 10px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-mark">🌿</div>
+    <h1>ระบบนัดคิวออนไลน์</h1>
+    <p>คลินิกแพทย์แผนไทยและแพทย์ทางเลือก · แพทย์แผนจีน<br>โรงพยาบาลควนโดน จ.สตูล</p>
+  </div>
+
+  <div class="sec-label">สำหรับผู้รับบริการ</div>
+
+  <a class="link" href="./">
+    <div class="link-ic i-thai">📅</div>
+    <div class="link-body"><div class="link-t">จองคิวออนไลน์</div><div class="link-d">แผนไทย และ แผนจีน · เลือกได้ในหน้าเดียว</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <a class="link" href="my-appointments.html">
+    <div class="link-ic i-blue">🔍</div>
+    <div class="link-body"><div class="link-t">ดูนัด / ยกเลิกนัด</div><div class="link-d">ค้นหาด้วยชื่อ+เบอร์ · ชื่อ+HN · รหัสจอง</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <a class="link" href="queue-calendar.html">
+    <div class="link-ic i-gold">🗓️</div>
+    <div class="link-body"><div class="link-t">ปฏิทินเปิดจองคิว</div><div class="link-d">ดูว่าขณะนี้เปิดจองถึงวันไหน</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <a class="link" href="tcm-booking.html">
+    <div class="link-ic i-cn">🏥</div>
+    <div class="link-body"><div class="link-t">จองคิวแพทย์แผนจีน</div><div class="link-d">ฝังเข็ม · ครอบแก้ว (เข้าตรง)</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <div class="sec-label">สำหรับเจ้าหน้าที่</div>
+
+  <div class="staff-note"><span>🔒</span><div>หน้าในส่วนนี้สำหรับเจ้าหน้าที่เท่านั้น กรุณาอย่าเผยแพร่ให้ผู้รับบริการ</div></div>
+
+  <a class="link" href="admin-dashboard.html">
+    <div class="link-ic i-thai">📋</div>
+    <div class="link-body"><div class="link-t">Admin แผนไทย</div><div class="link-d">ดูคิว · จองจากช่องว่าง · พิมพ์ตาราง · กดสถานะ</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <a class="link" href="admin-tcm.html">
+    <div class="link-ic i-cn">📋</div>
+    <div class="link-body"><div class="link-t">Admin แผนจีน</div><div class="link-d">ดูคิว · Walk-in · ค้นหา</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <a class="link" href="tv-display.html">
+    <div class="link-ic i-blue">📺</div>
+    <div class="link-body"><div class="link-t">จอแสดงคิว (ทีวี)</div><div class="link-d">เปิดแล้วกด F11 เต็มจอ · รีเฟรชเอง</div></div>
+    <div class="link-arr">›</div>
+  </a>
+
+  <div class="tip">
+    <b>💡 เคล็ดลับสำหรับเจ้าหน้าที่</b>
+    บุ๊กมาร์กหน้านี้ไว้หน้าเดียว แล้วกดเข้าหน้าที่ต้องการจากที่นี่ ไม่ต้องจำลิงก์ทีละหน้า<br>
+    งานประจำวันส่วนใหญ่ทำที่ <b>Admin แผนไทย</b> แท็บ "ดูคิว" ได้ครบ ทั้งดูคิว จองให้คนที่โทรมา และกดสถานะ
+  </div>
+
+  <div class="foot">
+    คลินิกแพทย์แผนไทยและแพทย์ทางเลือก · โรงพยาบาลควนโดน จ.สตูล
+  </div>
+
+</div>
+</body>
+</html>
