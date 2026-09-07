@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จอแสดงคิว — คลินิกแพทย์แผนไทยฯ รพ.ควนโดน</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Prompt:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0F2318;--bg2:#16341F;--panel:#1C4028;--panel2:#234E31;
+    --gold:#E8C15A;--cream:#F5EFD8;--line:rgba(255,255,255,.1);
+    --wait:#E8A93A;--wait-bg:rgba(232,169,58,.14);
+    --active:#5BD98A;--active-bg:rgba(91,217,138,.16);
+    --txt:#F5EFD8;--muted:#9DB3A2;
+  }
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Sarabun',sans-serif;background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--txt);height:100vh;display:flex;flex-direction:column}
+
+  /* header */
+  header{display:flex;align-items:center;justify-content:space-between;padding:2vh 3vw;background:rgba(0,0,0,.2);border-bottom:2px solid var(--gold)}
+  .brand{display:flex;align-items:center;gap:1.2vw}
+  .brand-logo{font-size:3.4vw}
+  .brand-txt h1{font-family:'Prompt',sans-serif;font-size:2.3vw;font-weight:700;color:var(--gold);line-height:1.1}
+  .brand-txt p{font-size:1.15vw;color:var(--muted)}
+  .clock{text-align:right}
+  .clock-time{font-family:'Prompt',sans-serif;font-size:3vw;font-weight:700;color:var(--cream);line-height:1;letter-spacing:1px}
+  .clock-date{font-size:1.15vw;color:var(--muted);margin-top:.3vh}
+
+  /* main */
+  main{flex:1;padding:2vh 3vw;display:flex;flex-direction:column;overflow:hidden}
+  .col-head{display:grid;grid-template-columns:14% 40% 26% 20%;gap:1vw;padding:1.4vh 2vw;font-family:'Prompt',sans-serif;font-size:1.5vw;font-weight:600;color:var(--gold);border-bottom:2px solid var(--line);margin-bottom:1vh}
+
+  .queue{flex:1;display:flex;flex-direction:column;gap:1.1vh;overflow:hidden}
+  .qrow{display:grid;grid-template-columns:14% 40% 26% 20%;gap:1vw;align-items:center;padding:1.7vh 2vw;border-radius:14px;background:var(--panel);border:1px solid var(--line);transition:all .4s}
+  .qrow.active{background:var(--active-bg);border-color:var(--active);box-shadow:0 0 30px rgba(91,217,138,.15)}
+  .qrow.wait{background:var(--panel)}
+
+  .q-time{font-family:'Prompt',sans-serif;font-size:2.2vw;font-weight:700;color:var(--cream)}
+  .q-name{font-size:2.3vw;font-weight:700;color:#fff}
+  .q-name .svc{display:block;font-size:1.2vw;font-weight:400;color:var(--muted);margin-top:.2vh}
+  .q-prov{font-size:1.9vw;font-weight:600;color:var(--cream);display:flex;align-items:center;gap:.6vw}
+  .q-prov-ic{width:2.6vw;height:2.6vw;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:1.3vw;flex-shrink:0;border:2px solid var(--gold)}
+  .q-status{font-family:'Prompt',sans-serif;font-size:1.6vw;font-weight:700;padding:1vh 1.4vw;border-radius:100px;text-align:center;display:flex;align-items:center;justify-content:center;gap:.5vw}
+  .q-status.wait{background:var(--wait-bg);color:var(--wait)}
+  .q-status.active{background:var(--active-bg);color:var(--active)}
+  .dot{width:1.1vw;height:1.1vw;border-radius:50%;flex-shrink:0}
+  .dot.wait{background:var(--wait)}
+  .dot.active{background:var(--active);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:2vh}
+  .empty-ic{font-size:7vw;opacity:.5}
+  .empty-t{font-size:2.4vw;font-weight:600}
+  .empty-s{font-size:1.4vw}
+
+  /* footer */
+  footer{padding:1.4vh 3vw;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:space-between;font-size:1.15vw;color:var(--muted);border-top:1px solid var(--line)}
+  .legend-tv{display:flex;gap:2vw}
+  .lg{display:flex;align-items:center;gap:.6vw}
+  .updated{display:flex;align-items:center;gap:.6vw}
+  .live-dot{width:.9vw;height:.9vw;border-radius:50%;background:var(--active);animation:pulse 1.4s infinite}
+
+  .count-badge{background:var(--gold);color:var(--bg);font-family:'Prompt',sans-serif;font-size:1.3vw;font-weight:700;padding:.3vh 1.2vw;border-radius:100px;margin-left:1vw}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-logo">🌿</div>
+    <div class="brand-txt">
+      <h1>คลินิกแพทย์แผนไทยและแพทย์ทางเลือก</h1>
+      <p>โรงพยาบาลควนโดน จ.สตูล · คิววันนี้</p>
+    </div>
+  </div>
+  <div class="clock">
+    <div class="clock-time" id="clock">--:--</div>
+    <div class="clock-date" id="date">—</div>
+  </div>
+</header>
+
+<main>
+  <div class="col-head">
+    <div>เวลานัด</div>
+    <div>ชื่อผู้รับบริการ</div>
+    <div>ผู้ให้บริการ</div>
+    <div style="text-align:center">สถานะ</div>
+  </div>
+  <div class="queue" id="queue">
+    <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">กำลังโหลดคิว...</div></div>
+  </div>
+</main>
+
+<footer>
+  <div class="legend-tv">
+    <div class="lg"><span class="dot active" style="animation:none"></span> กำลังรับบริการ</div>
+    <div class="lg"><span class="dot wait"></span> รอเรียก</div>
+  </div>
+  <div class="updated"><span class="live-dot"></span> อัปเดตล่าสุด <span id="updated">—</span> · รีเฟรชอัตโนมัติทุก 15 วินาที</div>
+</footer>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbzXCZF4t1x_3A9LMz3FyhiOPxbCMdMT4qg2tyLTcco_pfLYTBlz21SyiPa6C5K9zivETA/exec';
+const REFRESH_MS=15000;
+
+function tickClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('date').textContent=`วัน${dn[now.getDay()]} ${now.getDate()} ${mn[now.getMonth()]} ${now.getFullYear()+543}`;
+}
+setInterval(tickClock,1000);tickClock();
+
+function initials(name){
+  // ผู้ให้บริการ → เอาตัวอักษรแรก
+  return (name||'?').trim().charAt(0);
+}
+
+async function loadQueue(){
+  try{
+    const u=new URL(API);u.searchParams.set('action','getTodayQueue');
+    const res=await(await fetch(u,{redirect:'follow'})).json();
+    const box=document.getElementById('queue');
+    if(!res.success){box.innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">เชื่อมต่อไม่ได้</div></div>';return}
+
+    const q=res.queue||[];
+    document.getElementById('updated').textContent=res.updated||'';
+
+    if(!q.length){
+      box.innerHTML='<div class="empty"><div class="empty-ic">✅</div><div class="empty-t">ไม่มีคิวที่รอรับบริการ</div><div class="empty-s">คิวที่รอและกำลังให้บริการจะแสดงที่นี่</div></div>';
+      return;
+    }
+
+    box.innerHTML=q.map(item=>{
+      const isActive=item.service_status==='กำลังรับบริการ';
+      const cls=isActive?'active':'wait';
+      const statusTxt=isActive?'กำลังรับบริการ':'รอเรียก';
+      return `<div class="qrow ${cls}">
+        <div class="q-time">${item.time_start}</div>
+        <div class="q-name">${item.patient_name}<span class="svc">${item.service_name||''}</span></div>
+        <div class="q-prov"><span class="q-prov-ic">${initials(item.provider_name)}</span>${item.provider_name||'-'}</div>
+        <div class="q-status ${cls}"><span class="dot ${cls}"></span>${statusTxt}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('queue').innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">เชื่อมต่อไม่ได้</div><div class="empty-s">กำลังลองใหม่...</div></div>';
+  }
+}
+loadQueue();
+setInterval(loadQueue,REFRESH_MS);
+</script>
+</body>
+</html>

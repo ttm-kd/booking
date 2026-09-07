@@ -89,6 +89,12 @@
     .slot-svc{font-size:10px;color:var(--forest);display:block}
     .slot-ins{font-size:10px;color:var(--g400);display:block}
     .slot-actions{margin-top:3px;display:flex;gap:3px;flex-wrap:wrap}
+    .slot-status{display:block;font-size:10px;font-weight:700;margin-top:2px}
+    .td-slot.st-active{box-shadow:inset 0 0 0 2px #5BD98A}
+    .td-slot.st-active .slot-status{color:#166534}
+    .td-slot.st-wait .slot-status{color:#B45309}
+    .td-slot.st-done{opacity:.6}
+    .td-slot.st-done .slot-status{color:#6B7280}
     .slot-btn{font-size:9px;padding:2px 6px;border-radius:4px;border:none;cursor:pointer;font-family:inherit;font-weight:600}
 
     /* WALK-IN FORM */
@@ -463,11 +469,19 @@ function renderQueue(bookings) {
       if (booking) {
         const isWalkin = booking.booking_type === 'walk-in';
         const ins = insMap[booking.insurance_type] || '';
-        html += `<td class="td-slot ${isWalkin ? 'td-walkin' : 'td-booked'}" onclick="viewBooking('${booking.booking_id}')">
+        const svcStatus = booking.service_status || 'รอเรียก';
+        const statusMap = {
+          'รอเรียก': {cls:'st-wait', ic:'⏳', next:'กำลังรับบริการ', btnTxt:'▶ เรียก', btnBg:'#DCFCE7', btnCol:'#166534'},
+          'กำลังรับบริการ': {cls:'st-active', ic:'🟢', next:'เสร็จแล้ว', btnTxt:'✓ เสร็จ', btnBg:'#E0E7FF', btnCol:'#3730A3'},
+          'เสร็จแล้ว': {cls:'st-done', ic:'✅', next:'รอเรียก', btnTxt:'↺ รอ', btnBg:'#F3F4F6', btnCol:'#6B7280'},
+        };
+        const st = statusMap[svcStatus] || statusMap['รอเรียก'];
+        html += `<td class="td-slot ${isWalkin ? 'td-walkin' : 'td-booked'} ${st.cls}" onclick="viewBooking('${booking.booking_id}')">
           <span class="slot-name">${booking.patient_name || '-'}</span>
           <span class="slot-svc">${booking.service_name || ''}</span>
-          ${ins ? `<span class="slot-ins">${ins}</span>` : ''}
+          <span class="slot-status">${st.ic} ${svcStatus}</span>
           <div class="slot-actions">
+            <button class="slot-btn" style="background:${st.btnBg};color:${st.btnCol};font-weight:700" onclick="event.stopPropagation();cycleStatus('${booking.booking_id}','${st.next}')">${st.btnTxt}</button>
             <button class="slot-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="event.stopPropagation();printAppointment('${booking.booking_id}')">🖨️</button>
             <button class="slot-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBooking('${booking.booking_id}')">❌</button>
           </div>
@@ -594,6 +608,19 @@ async function cancelBooking(bid) {
     const res = await apiPost({ action: 'cancel', booking_id: bid, reason: 'เจ้าหน้าที่ยกเลิก' });
     if (res.success) {
       showToast('✅ ยกเลิกเรียบร้อย');
+      loadQueue();
+    } else {
+      alert('เกิดข้อผิดพลาด: ' + res.error);
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function cycleStatus(bid, nextStatus) {
+  try {
+    const res = await apiPost({ action: 'updateStatus', booking_id: bid, service_status: nextStatus });
+    if (res.success) {
+      const msg = {'กำลังรับบริการ':'▶ เรียกคิวแล้ว','เสร็จแล้ว':'✓ เสร็จสิ้น','รอเรียก':'↺ กลับเป็นรอเรียก'};
+      showToast(msg[nextStatus] || 'อัปเดตสถานะแล้ว');
       loadQueue();
     } else {
       alert('เกิดข้อผิดพลาด: ' + res.error);
