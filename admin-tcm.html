@@ -29,7 +29,7 @@
     .tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--g200);background:#fff;margin-bottom:16px}
     .tbl{width:100%;border-collapse:collapse;font-size:13px}
     .tbl th{padding:10px 8px;font-weight:700;text-align:center;border:1px solid var(--g200)}
-    .tbl td{padding:8px;border:1px solid var(--g200);vertical-align:top;min-width:120px}
+    .tbl td{padding:8px;border:1px solid var(--g200);vertical-align:top;min-width:120px;height:78px}
     .tbl .th-period{background:var(--pri);color:#fff;font-size:14px}
     .tbl .th-time{background:var(--pri-lt);color:var(--pri-dk);font-size:12px}
     .tbl .th-num{background:var(--g100);color:var(--g600);font-size:11px;width:40px}
@@ -47,10 +47,29 @@
     .empty{text-align:center;padding:24px;color:var(--g400)}
     .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g800);color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;font-weight:600;z-index:200}
     .search-result{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:8px;border:1px solid var(--g200)}
-    .walkin-form{background:#fff;border-radius:var(--r);padding:16px;border:1px solid var(--g200)}
     .fg{margin-bottom:12px}
     .fl{display:block;font-size:14px;font-weight:600;margin-bottom:4px;color:var(--g700)}
     .legend{font-size:12px;color:var(--g400);text-align:center;margin-top:8px}
+    .hidden{display:none!important}
+    .td-free{background:#fff;cursor:pointer;text-align:center;vertical-align:middle!important;transition:background var(--tr)}
+    .td-free:hover{background:var(--pri-lt)}
+    .free-plus{font-size:20px;font-weight:300;color:var(--g300)}
+    .td-free:hover .free-plus{color:var(--pri)}
+    .td-past{background:var(--g50)}
+    .p-name,.p-svc,.p-ins{display:block}
+    .err{color:var(--red);font-size:13px;margin-bottom:10px}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+    .modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:20px}
+    @media(min-width:600px){.modal-bg{align-items:center}.modal{border-radius:16px}}
+    .modal-t{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--pri-dk)}
+    .modal-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--g400);padding:0 4px;line-height:1}
+    .qb-info{background:var(--pri-lt);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:14px;line-height:1.7;color:var(--pri-dk)}
+    .dt-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--g100);font-size:14px}
+    .dt-row:last-child{border:none}
+    .dt-k{width:100px;flex-shrink:0;color:var(--g500)}
+    .dt-v{font-weight:600;word-break:break-word}
+    .dt-actions{display:flex;gap:8px;margin-top:16px}
+    .dt-actions .btn{flex:1}
   </style>
 </head>
 <body>
@@ -60,15 +79,14 @@
   </div>
   <div class="tabs">
     <div class="tab on" data-t="queue" onclick="switchTab('queue')">📋 ดูคิว</div>
-    <div class="tab" data-t="walkin" onclick="switchTab('walkin')">🚶 Walk-in</div>
-    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหา</div>
+    <div class="tab" data-t="search" onclick="switchTab('search')">🔍 ค้นหาผู้ป่วย</div>
   </div>
 
   <!-- PANEL: คิว -->
   <div class="panel on" id="pQueue">
     <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
       <button onclick="changeDate(-1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">←</button>
-      <input type="date" class="fi" id="qDate" onchange="loadQueue()" style="text-align:center;font-size:13px;padding:8px;font-weight:600;flex:1">
+      <input type="date" class="fi" id="qDate" onchange="updateDateLabel();loadQueue()" style="text-align:center;font-size:13px;padding:8px;font-weight:600;flex:1">
       <button onclick="changeDate(1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">→</button>
       <button onclick="goToday()" class="btn btn-p" style="font-size:11px;padding:8px 12px;white-space:nowrap">วันนี้</button>
     </div>
@@ -81,29 +99,39 @@
     <div id="queueTable"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
   </div>
 
-  <!-- PANEL: Walk-in -->
-  <div class="panel" id="pWalkin">
-    <div class="walkin-form">
-      <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--pri)">🚶 Walk-in — เพิ่มคิวหน้างาน</div>
-      <div class="fg"><label class="fl">เลือกเวลา</label><select class="fi" id="wiSlot"></select></div>
-      <div class="fg"><label class="fl">บริการ</label><select class="fi" id="wiService"></select></div>
-      <div class="fg"><label class="fl">ชื่อ-สกุล *</label><input type="text" class="fi" id="wiName"></div>
-      <div class="fg"><label class="fl">HN</label><input type="text" class="fi" id="wiHn"></div>
-      <div class="fg"><label class="fl">เบอร์โทร</label><input type="tel" class="fi" id="wiPhone"></div>
-      <div class="fg"><label class="fl">สิทธิ์การรักษา</label><select class="fi" id="wiIns"></select></div>
-      <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="wiNote"></div>
-      <button class="btn btn-p" style="width:100%;padding:14px" onclick="submitWalkin()">✅ เพิ่มคิว Walk-in</button>
-      <div id="wiErr" style="color:var(--red);font-size:14px;margin-top:8px"></div>
-    </div>
-  </div>
-
   <!-- PANEL: ค้นหา -->
   <div class="panel" id="pSearch">
     <div style="display:flex;gap:8px;margin-bottom:16px">
-      <input type="text" class="fi" id="searchInput" placeholder="พิมพ์ชื่อ, HN หรือรหัสจอง..." style="flex:1">
+      <input type="text" class="fi" id="searchInput" placeholder="พิมพ์ชื่อ, HN หรือรหัสจอง..." style="flex:1" onkeydown="if(event.key==='Enter')doSearch()">
       <button class="btn btn-p" onclick="doSearch()">🔍 ค้นหา</button>
     </div>
     <div id="searchResults"></div>
+  </div>
+
+  <!-- MODAL: รายละเอียดคิว -->
+  <div class="modal-bg hidden" id="dtModal" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal">
+      <button class="modal-close" onclick="document.getElementById('dtModal').classList.add('hidden')">&times;</button>
+      <div class="modal-t" id="dtTitle">รายละเอียดคิว</div>
+      <div id="dtBody"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: เพิ่มคิว (กด + ในตาราง) -->
+  <div class="modal-bg hidden" id="qbModal" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal">
+      <button class="modal-close" onclick="document.getElementById('qbModal').classList.add('hidden')">&times;</button>
+      <div class="modal-t">➕ เพิ่มคิว</div>
+      <div class="qb-info" id="qbInfo"></div>
+      <div class="fg"><label class="fl">บริการ *</label><select class="fi" id="qbSvc"></select></div>
+      <div class="fg"><label class="fl">ชื่อ-สกุลผู้ป่วย *</label><input type="text" class="fi" id="qbName" placeholder="กรอกชื่อ-สกุล"></div>
+      <div class="fg"><label class="fl">HN</label><input type="text" class="fi" id="qbHn" placeholder="กรอก HN (ถ้ามี)"></div>
+      <div class="fg"><label class="fl">เบอร์โทร</label><input type="tel" class="fi" id="qbPhone" placeholder="0xx-xxx-xxxx"></div>
+      <div class="fg"><label class="fl">สิทธิ์การรักษา</label><select class="fi" id="qbIns"></select></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="qbNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
+      <div id="qbErr" class="err hidden"></div>
+      <button class="btn btn-p" id="qbBtn" onclick="submitQuickBook()" style="width:100%;padding:14px">✅ ยืนยันเพิ่มคิว</button>
+    </div>
   </div>
 
 <script>
@@ -116,30 +144,47 @@ const SLOTS=[
   {index:5,start:'14:30',end:'15:30',period:'บ่าย'},
   {index:6,start:'15:30',end:'16:30',period:'บ่าย'},
 ];
-const MAX=3;
+const MAX=3; // จำนวนคนต่อช่วงเวลา
 let todayStr='';
 let allBookings=[];
+let searchBookings=[];
+let serviceList=[];
+let insList=[];
+let qbCtx=null;
 const insMap={uc:'บัตรทอง',social_security:'ปกส.',government:'ขรก.',cash:'จ่ายเอง',other:'อื่นๆ'};
 
 async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a);Object.entries(p).forEach(([k,v])=>u.searchParams.set(k,v));return(await fetch(u)).json()}
 async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
 
-function formatThaiDate(ds){const d=new Date(ds+'T00:00:00+07:00');const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return`วัน${dn[d.getDay()]}ที่ ${d.getDate()} ${mn[d.getMonth()]} ${d.getFullYear()+543}`}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+// เวลาจาก Google Sheet บางครั้งมาเป็น ISO string → แปลงให้เป็น HH:MM
+function safeTime(v){
+  if(!v)return'';const s=String(v);
+  if(s.includes('T')){try{const d=new Date(s);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')}catch(e){}}
+  return s.slice(0,5);
+}
+// วันที่วันนี้ตามเวลาเครื่อง (ไม่ใช้ toISOString เพราะก่อน 7 โมงเช้าจะได้วันของเมื่อวาน)
+function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function formatThaiDate(ds){const[y,m,dd]=String(ds).slice(0,10).split('-').map(Number);const d=new Date(y,m-1,dd);const dn=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return`วัน${dn[d.getDay()]}ที่ ${d.getDate()} ${mn[d.getMonth()]} ${d.getFullYear()+543}`}
 
 async function init(){
-  const now=new Date();
-  todayStr=now.toISOString().slice(0,10);
+  todayStr=localDateStr(new Date());
   document.getElementById('qDate').value=todayStr;
   updateDateLabel();
   loadQueue();
-  loadWalkinForm();
+  loadFormOptions();
 }
 
 function updateDateLabel(){
   const ds=document.getElementById('qDate').value||todayStr;
-  document.getElementById('dateLabel').innerHTML=`📅 ${formatThaiDate(ds)}`;
+  document.getElementById('dateLabel').innerHTML=`📅 ${formatThaiDate(ds)}${ds===todayStr?' · <b style="color:var(--pri)">วันนี้</b>':''}`;
 }
-function changeDate(d){const el=document.getElementById('qDate');const dt=new Date(el.value);dt.setDate(dt.getDate()+d);el.value=dt.toISOString().slice(0,10);updateDateLabel();loadQueue()}
+function changeDate(n){
+  const el=document.getElementById('qDate');
+  const[y,m,d]=(el.value||todayStr).split('-').map(Number);
+  el.value=localDateStr(new Date(y,m-1,d+n));
+  updateDateLabel();loadQueue();
+}
 function goToday(){document.getElementById('qDate').value=todayStr;updateDateLabel();loadQueue()}
 
 async function loadQueue(){
@@ -148,154 +193,146 @@ async function loadQueue(){
   box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
   try{
     const res=await apiGet('getBookings',{date:dateStr});
-    if(!res.success){box.innerHTML='<div class="empty">❌ '+res.error+'</div>';return}
+    if(!res.success){box.innerHTML='<div class="empty">❌ '+esc(res.error)+'</div>';return}
     allBookings=res.bookings||[];
     renderTable(allBookings);
-  }catch(e){box.innerHTML='<div class="empty">❌ '+e.message+'</div>'}
+  }catch(e){box.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'}
 }
 
 function renderTable(bookings){
   const box=document.getElementById('queueTable');
-  const total=bookings.length;
-  const online=bookings.filter(b=>b.booking_type==='online').length;
-  const walkin=bookings.filter(b=>b.booking_type==='walk-in').length;
-  document.getElementById('stTotal').textContent=total;
-  document.getElementById('stOnline').textContent=online;
-  document.getElementById('stWalkin').textContent=walkin;
+  const dateStr=document.getElementById('qDate').value||todayStr;
+  const isPast=dateStr<todayStr;
+  document.getElementById('stTotal').textContent=bookings.length;
+  document.getElementById('stOnline').textContent=bookings.filter(b=>b.booking_type==='online').length;
+  document.getElementById('stWalkin').textContent=bookings.filter(b=>b.booking_type==='walk-in').length;
 
-  // สร้างตาราง: แถว = ลำดับคนไข้ (1-3), คอลัมน์ = slot เวลา
-  let html='<div class="tbl-wrap"><table class="tbl">';
-
-  // Header: ช่วงเวลา
+  // ตาราง: แถว = ลำดับคนไข้ (1-3), คอลัมน์ = ช่วงเวลา
   const morningSlots=SLOTS.filter(s=>s.period==='เช้า');
   const afternoonSlots=SLOTS.filter(s=>s.period==='บ่าย');
+  let html='<div class="tbl-wrap"><table class="tbl">';
   html+=`<tr><th class="th-num" rowspan="2">ลำดับ</th>`;
   html+=`<th class="th-period" colspan="${morningSlots.length}">ในเวลาราชการ (เช้า)</th>`;
   html+=`<th class="th-period" style="background:var(--gold);color:var(--g800)" colspan="${afternoonSlots.length}">ในเวลาราชการ (บ่าย)</th></tr>`;
+  html+='<tr>'+SLOTS.map(s=>`<th class="th-time">${s.start}-${s.end}</th>`).join('')+'</tr>';
 
-  html+='<tr>';
-  SLOTS.forEach(s=>{html+=`<th class="th-time">${s.start}-${s.end}</th>`});
-  html+='</tr>';
-
-  // Data rows: 3 แถว (คนที่ 1, 2, 3 ในแต่ละ slot)
   for(let p=0;p<MAX;p++){
-    html+=`<tr><td class="th-num" style="text-align:center;font-weight:700">${p+1}</td>`;
+    html+=`<tr><td class="th-num" style="text-align:center;font-weight:700;vertical-align:middle">${p+1}</td>`;
     SLOTS.forEach(slot=>{
-      const slotBookings=bookings.filter(b=>b.time_start===slot.start);
-      const b=slotBookings[p];
+      const b=bookings.filter(x=>safeTime(x.time_start)===slot.start)[p];
       if(b){
         const isWalkin=b.booking_type==='walk-in';
         const ins=insMap[b.insurance_type]||'';
-        html+=`<td class="${isWalkin?'td-walkin':'td-booked'}" onclick="viewDetail('${b.booking_id}')" style="cursor:pointer">
-          <span class="p-name">${b.patient_name||'-'}</span>
-          <span class="p-svc">${b.service_name||''}</span>
-          ${ins?`<span class="p-ins">${ins}</span>`:''}
+        html+=`<td class="${isWalkin?'td-walkin':'td-booked'}" onclick="viewDetail('${esc(b.booking_id)}')" style="cursor:pointer">
+          <span class="p-name">${esc(b.patient_name||'-')}</span>
+          <span class="p-svc">${esc(b.service_name||'')}</span>
+          ${ins?`<span class="p-ins">${esc(ins)}</span>`:''}
           <div class="p-actions">
-            <button class="p-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="event.stopPropagation();printCard('${b.booking_id}')">🖨️</button>
-            <button class="p-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBk('${b.booking_id}')">❌</button>
+            <button class="p-btn" style="background:var(--gold-lt);color:#7C6B2D" onclick="event.stopPropagation();printCard('${esc(b.booking_id)}')">🖨️</button>
+            <button class="p-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBk('${esc(b.booking_id)}')">❌</button>
           </div>
         </td>`;
+      }else if(isPast){
+        html+='<td class="td-past"></td>';
       }else{
-        html+='<td class="td-empty"></td>';
+        html+=`<td class="td-free" onclick="openQuickBook(${slot.index})" title="เพิ่มคิว ${slot.start}-${slot.end}"><span class="free-plus">+</span></td>`;
       }
     });
     html+='</tr>';
   }
-
   html+='</table></div>';
-  html+='<div class="legend">🟢 สีเขียว = จองออนไลน์ · 🟠 สีส้ม = Walk-in · ⬜ ว่าง · กดที่ช่องเพื่อดูรายละเอียด</div>';
+  html+='<div class="legend">🟢 จองออนไลน์ · 🟠 Walk-in · <b>+</b> กดเพื่อเพิ่มคิว · กดที่ชื่อเพื่อดูรายละเอียด</div>';
   box.innerHTML=html;
 }
 
+// ============ รายละเอียดคิว ============
+function findBooking(bid){return allBookings.find(x=>x.booking_id===bid)||searchBookings.find(x=>x.booking_id===bid)}
+
 function viewDetail(bid){
-  const b=allBookings.find(x=>x.booking_id===bid);
-  if(!b)return;
+  const b=findBooking(bid);if(!b)return;
   const ins=insMap[b.insurance_type]||b.insurance_type||'-';
-  let scrHtml='';
-  if(b.screening){try{const s=JSON.parse(b.screening);scrHtml=Object.entries(s).map(([k,v])=>`<b>${k}:</b> ${v}`).join(' · ')}catch(e){}}
-  alert(`📋 รายละเอียดคิว\n\nรหัส: ${b.booking_id}\nชื่อ: ${b.patient_name}\nHN: ${b.patient_hn||'-'}\nเวลา: ${b.time_start} – ${b.time_end}\nบริการ: ${b.service_name}\nสิทธิ์: ${ins}\nประเภท: ${b.booking_type}\n${scrHtml?'\nคัดกรอง: '+scrHtml:''}\n${b.notes?'หมายเหตุ: '+b.notes:''}`);
+  const row=(k,v)=>`<div class="dt-row"><span class="dt-k">${k}</span><span class="dt-v">${v}</span></div>`;
+  let html=row('ชื่อ-สกุล',esc(b.patient_name||'-'))+row('HN',esc(b.patient_hn||'-'))
+    +row('เบอร์โทร',esc(b.patient_phone||'-'))
+    +row('เวลา',`${esc(safeTime(b.time_start))} – ${esc(safeTime(b.time_end))}`)
+    +row('บริการ',esc(b.service_name||'-'))+row('สิทธิ์',esc(ins))
+    +row('ประเภท',b.booking_type==='walk-in'?'Walk-in':'จองออนไลน์');
+  if(b.screening){try{const s=JSON.parse(b.screening);html+=row('คัดกรอง',Object.entries(s).map(([k,v])=>`${esc(k)}: ${esc(v)}`).join('<br>'))}catch(e){}}
+  if(b.notes)html+=row('หมายเหตุ',esc(b.notes));
+  html+=`<div class="dt-actions">
+    <button class="btn btn-g" onclick="printCard('${esc(b.booking_id)}')">🖨️ พิมพ์ใบนัด</button>
+    <button class="btn" style="background:#FEF2F2;color:var(--red)" onclick="cancelBk('${esc(b.booking_id)}')">❌ ยกเลิกคิว</button>
+  </div>`;
+  document.getElementById('dtTitle').textContent='📋 '+b.booking_id;
+  document.getElementById('dtBody').innerHTML=html;
+  document.getElementById('dtModal').classList.remove('hidden');
 }
 
 async function cancelBk(bid){
   if(!confirm('ยกเลิกคิว '+bid+' ?'))return;
   const res=await apiPost({action:'cancel',booking_id:bid,reason:'ยกเลิกโดยเจ้าหน้าที่'});
-  if(res.success){showToast('❌ ยกเลิกแล้ว');loadQueue()}else{alert('Error: '+res.error)}
+  if(res.success){document.getElementById('dtModal').classList.add('hidden');showToast('❌ ยกเลิกแล้ว');loadQueue()}
+  else{alert('Error: '+(res.error||res.message))}
 }
 
-function printCard(bid){
-  const b=allBookings.find(x=>x.booking_id===bid);if(!b)return;
-  const dateStr=document.getElementById('qDate').value||todayStr;
-  const ins=insMap[b.insurance_type]||b.insurance_type||'-';
-  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(b.booking_id)}`;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบนัด ${b.booking_id}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Sarabun',sans-serif;font-size:14px;padding:20px}
-  .card{max-width:420px;margin:0 auto;border:2px solid #8B4513;border-radius:12px;overflow:hidden}
-  .card-h{background:linear-gradient(135deg,#5C2E0A,#8B4513);color:white;padding:16px 20px;text-align:center}
-  .card-h h2{font-size:16px}.card-h p{font-size:12px;opacity:.7}
-  .card-b{padding:18px 20px}
-  .title{text-align:center;font-size:18px;font-weight:700;color:#8B4513;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed #E5E2DB}
-  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F3F1ED}.row:last-child{border:none}
-  .label{color:#9C9890;font-size:13px}.value{font-weight:600;font-size:13px}
-  .qr{text-align:center;margin-top:14px;padding-top:14px;border-top:2px dashed #E5E2DB}
-  .qr img{width:120px}.qr p{font-size:11px;color:#9C9890;margin-top:4px}
-  .note{background:#FFF8E1;border:1px solid #F5D98A;border-radius:8px;padding:10px;margin-top:14px;font-size:12px;color:#7C6B2D;text-align:center;line-height:1.5}
-  @media print{body{padding:0}.card{border:none}@page{size:A5;margin:10mm}}</style></head><body>
-  <div class="card"><div class="card-h"><h2>🏥 คลินิกแพทย์แผนจีน</h2><p>โรงพยาบาลควนโดน จ.สตูล</p></div>
-  <div class="card-b"><div class="title">🏥 ใบนัดหมาย</div>
-  <div class="row"><span class="label">รหัสนัด</span><span class="value">${b.booking_id}</span></div>
-  <div class="row"><span class="label">ชื่อ-สกุล</span><span class="value">${b.patient_name}</span></div>
-  <div class="row"><span class="label">HN</span><span class="value">${b.patient_hn||'-'}</span></div>
-  <div class="row"><span class="label">วันที่</span><span class="value">${formatThaiDate(dateStr)}</span></div>
-  <div class="row"><span class="label">เวลา</span><span class="value">${b.time_start} – ${b.time_end}</span></div>
-  <div class="row"><span class="label">บริการ</span><span class="value">${b.service_name}</span></div>
-  <div class="row"><span class="label">สิทธิ์</span><span class="value">${ins}</span></div>
-  <div class="qr"><img src="${qrUrl}"><p>สแกน QR เพื่อตรวจสอบนัดหมาย</p></div>
-  <div class="note">⚠️ กรุณามาถึงก่อนเวลานัด 15 นาที พร้อมบัตรประชาชน</div>
-  </div></div><script>window.onload=function(){window.print()}<\/script></body></html>`);
-  w.document.close();
-}
-
-// ============ WALK-IN ============
-async function loadWalkinForm(){
+// ============ เพิ่มคิว (กด + ในตาราง) ============
+async function loadFormOptions(){
   try{
     const[svcR,insR]=await Promise.all([apiGet('getServices'),apiGet('getInsuranceTypes')]);
-    const slotSel=document.getElementById('wiSlot');
-    slotSel.innerHTML=SLOTS.map(s=>`<option value="${s.index}">${s.start} – ${s.end} (${s.period})</option>`).join('');
-    const svcSel=document.getElementById('wiService');
-    if(svcR.success)svcSel.innerHTML=svcR.services.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join('');
-    const insSel=document.getElementById('wiIns');
-    if(insR.success)insSel.innerHTML=insR.insurance_types.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+    if(svcR.success)serviceList=svcR.services||[];
+    if(insR.success)insList=insR.insurance_types||[];
   }catch(e){console.error(e)}
 }
 
-async function submitWalkin(){
-  const name=document.getElementById('wiName').value.trim();
-  if(!name){document.getElementById('wiErr').textContent='กรุณากรอกชื่อ';return}
-  document.getElementById('wiErr').textContent='';
+function openQuickBook(slotIndex){
+  const slot=SLOTS.find(s=>s.index===slotIndex);if(!slot)return;
+  const dateStr=document.getElementById('qDate').value||todayStr;
+  qbCtx={slotIndex,dateStr,slot};
+  document.getElementById('qbInfo').innerHTML=`📅 ${formatThaiDate(dateStr)}<br>🕐 ${slot.start} – ${slot.end} (${slot.period})`;
+  document.getElementById('qbSvc').innerHTML=serviceList.length
+    ?serviceList.map(s=>`<option value="${esc(s.id)}">${esc(s.icon||'')} ${esc(s.name)}</option>`).join('')
+    :'<option value="">กำลังโหลดรายการบริการ...</option>';
+  document.getElementById('qbIns').innerHTML=insList.length
+    ?insList.map(t=>`<option value="${esc(t.id)}">${esc(t.icon||'')} ${esc(t.name)}</option>`).join('')
+    :Object.entries(insMap).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  ['qbName','qbHn','qbPhone','qbNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('qbErr').classList.add('hidden');
+  document.getElementById('qbModal').classList.remove('hidden');
+  if(!serviceList.length)loadFormOptions().then(()=>{if(qbCtx&&qbCtx.slotIndex===slotIndex&&serviceList.length)openQuickBook(slotIndex)});
+  setTimeout(()=>document.getElementById('qbName').focus(),100);
+}
+
+async function submitQuickBook(){
+  if(!qbCtx)return;
+  const name=document.getElementById('qbName').value.trim();
+  const svc=document.getElementById('qbSvc').value;
+  const errEl=document.getElementById('qbErr');
+  if(!name||!svc){errEl.textContent=!name?'กรุณากรอกชื่อ-สกุล':'กรุณาเลือกบริการ';errEl.classList.remove('hidden');return}
+  errEl.classList.add('hidden');
+  const btn=document.getElementById('qbBtn');
+  btn.disabled=true;btn.textContent='⏳ กำลังบันทึก...';
   try{
     const res=await apiPost({
       action:'walkin',
-      date:document.getElementById('qDate').value||todayStr,
-      slot_index:Number(document.getElementById('wiSlot').value),
-      service_id:document.getElementById('wiService').value,
+      date:qbCtx.dateStr,
+      slot_index:qbCtx.slotIndex,
+      service_id:svc,
       patient_name:name,
-      patient_hn:document.getElementById('wiHn').value.trim(),
-      patient_phone:document.getElementById('wiPhone').value.trim(),
-      insurance_type:document.getElementById('wiIns').value,
-      notes:document.getElementById('wiNote').value.trim(),
+      patient_hn:document.getElementById('qbHn').value.trim(),
+      patient_phone:document.getElementById('qbPhone').value.trim(),
+      insurance_type:document.getElementById('qbIns').value,
+      notes:document.getElementById('qbNote').value.trim(),
     });
     if(res.success){
-      showToast('✅ เพิ่ม Walk-in สำเร็จ');
-      document.getElementById('wiName').value='';document.getElementById('wiHn').value='';
-      document.getElementById('wiPhone').value='';document.getElementById('wiNote').value='';
-      switchTab('queue');loadQueue();
-    }else{document.getElementById('wiErr').textContent=res.error}
-  }catch(e){document.getElementById('wiErr').textContent=e.message}
+      document.getElementById('qbModal').classList.add('hidden');
+      showToast('✅ เพิ่มคิวสำเร็จ');
+      loadQueue();
+    }else{errEl.textContent=res.error||res.message||'เกิดข้อผิดพลาด';errEl.classList.remove('hidden')}
+  }catch(e){errEl.textContent='เกิดข้อผิดพลาด: '+e.message;errEl.classList.remove('hidden')}
+  btn.disabled=false;btn.textContent='✅ ยืนยันเพิ่มคิว';
 }
 
-// ============ SEARCH ============
+// ============ ค้นหา ============
 async function doSearch(){
   const q=document.getElementById('searchInput').value.trim();
   if(!q)return;
@@ -303,30 +340,103 @@ async function doSearch(){
   box.innerHTML='<div class="ld"><div class="sp"></div>กำลังค้นหา...</div>';
   try{
     const res=await apiGet('searchPatient',{q:q});
-    if(!res.success||!res.bookings.length){box.innerHTML='<div class="empty">ไม่พบข้อมูล</div>';return}
-    box.innerHTML=res.bookings.map(b=>{
+    searchBookings=(res.success&&res.bookings)||[];
+    if(!searchBookings.length){box.innerHTML='<div class="empty">ไม่พบข้อมูล</div>';return}
+    box.innerHTML=searchBookings.map(b=>{
       const ins=insMap[b.insurance_type]||b.insurance_type||'-';
+      const active=b.status!=='cancelled';
       return`<div class="search-result">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <b>${b.patient_name}</b><span style="font-size:12px;color:var(--g400)">${b.booking_id}</span>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;gap:8px">
+          <b>${esc(b.patient_name)}</b><span style="font-size:12px;color:var(--g400)">${esc(b.booking_id)}</span>
         </div>
         <div style="font-size:13px;color:var(--g600)">
-          📅 ${b.date_thai||b.date} · 🕐 ${b.time_start}–${b.time_end} · 💆 ${b.service_name} · 🏥 ${ins}
-          · <span style="color:${b.status==='cancelled'?'var(--red)':'var(--pri)'}">${b.status}</span>
-        </div></div>`;
+          📅 ${esc(b.date_thai||b.date)} · 🕐 ${esc(safeTime(b.time_start))}–${esc(safeTime(b.time_end))} · ${esc(b.service_name)} · ${esc(ins)}
+          · <span style="color:${active?'var(--pri)':'var(--red)'}">${esc(b.status)}</span>
+        </div>
+        ${active?`<button class="p-btn" style="margin-top:6px;background:var(--gold-lt);color:#7C6B2D;font-size:12px;padding:4px 10px" onclick="printCard('${esc(b.booking_id)}')">🖨️ พิมพ์ใบนัด</button>`:''}
+      </div>`;
     }).join('');
-  }catch(e){box.innerHTML='<div class="empty">❌ '+e.message+'</div>'}
+  }catch(e){box.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'}
 }
 
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.dataset.t===t));
-  ['pQueue','pWalkin','pSearch'].forEach(id=>{
-    document.getElementById(id).classList.toggle('on',id==='p'+t.charAt(0).toUpperCase()+t.slice(1));
-  });
-  // Fix panel mapping
   document.getElementById('pQueue').classList.toggle('on',t==='queue');
-  document.getElementById('pWalkin').classList.toggle('on',t==='walkin');
   document.getElementById('pSearch').classList.toggle('on',t==='search');
+  if(t==='search')document.getElementById('searchInput').focus();
+}
+
+// ============ พิมพ์ใบนัด (เครื่อง thermal Xprinter กระดาษม้วน 58 มม.) ============
+// ตั้งค่าเหมือนหน้าแผนไทย: ในหน้าต่างพิมพ์ต้องเลือก "ระยะขอบ = ไม่มี"
+const SLIP_ROLL_LEN_MM=120;
+function printCard(bid){
+  const b=findBooking(bid);if(!b){alert('ไม่พบข้อมูลการจอง');return}
+  const dateStr=(b.date&&/^\d{4}-\d{2}-\d{2}/.test(String(b.date)))?String(b.date).slice(0,10):(document.getElementById('qDate').value||todayStr);
+  const ins=insMap[b.insurance_type]||b.insurance_type||'-';
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&qzone=1&data=${encodeURIComponent(b.booking_id)}`;
+  const printedAt=new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  const L=SLIP_ROLL_LEN_MM;
+  const w=window.open('','_blank','width=420,height=640');
+  if(!w){alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up สำหรับเว็บนี้');return}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบนัด ${esc(b.booking_id)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:58mm ${L}mm;margin:0}
+  html,body{width:58mm;height:${L}mm;overflow:hidden;background:#fff;color:#000}
+  body{font-family:'Sarabun','Tahoma',sans-serif;font-weight:600}
+  @media screen{html,body{height:auto;overflow:visible}body{background:#ddd;padding:12px;width:auto}.slip{background:#fff;margin:0 auto;box-shadow:0 1px 6px rgba(0,0,0,.3)}}
+  .slip{width:58mm;height:${L}mm;overflow:hidden;padding:1mm 5mm 0}
+  .in{width:48mm;transform-origin:top center}
+  .c{text-align:center}
+  .h1{font-size:9.5pt;font-weight:700;line-height:1.3}
+  .h2{font-size:8pt;line-height:1.3}
+  .ttl{font-size:12pt;font-weight:800;margin-top:0.5mm}
+  .hr{border-top:0.35mm dashed #000;margin:1.2mm 0}.hr.s{border-top-style:solid}
+  .dt{font-size:10.5pt;font-weight:700;line-height:1.3}
+  .tm{font-size:16pt;font-weight:800;line-height:1.15}
+  table{width:100%;border-collapse:collapse}
+  td{font-size:8.5pt;line-height:1.3;padding:0.4mm 0;vertical-align:top}
+  td.l{width:13mm;padding-right:1mm;font-weight:500;white-space:nowrap}
+  td.v{font-weight:700;word-break:break-word}
+  img.qr{display:block;width:21mm;height:21mm;margin:0.5mm auto 0.3mm;image-rendering:pixelated}
+  .sm{font-size:7pt;line-height:1.3}
+  .note{border:0.35mm solid #000;border-radius:1mm;padding:0.8mm;font-size:8pt;font-weight:700;line-height:1.3;margin-top:1.2mm}
+</style></head><body>
+<div class="slip"><div class="in">
+  <div class="c h1">คลินิกแพทย์แผนจีน</div>
+  <div class="c h2">โรงพยาบาลควนโดน จ.สตูล</div>
+  <div class="hr"></div>
+  <div class="c ttl">ใบนัดหมาย</div>
+  <div class="c dt">${formatThaiDate(dateStr)}</div>
+  <div class="c tm">${esc(safeTime(b.time_start))} – ${esc(safeTime(b.time_end))} น.</div>
+  <div class="hr s"></div>
+  <table>
+    <tr><td class="l">ชื่อ</td><td class="v">${esc(b.patient_name||'-')}</td></tr>
+    <tr><td class="l">HN</td><td class="v">${esc(b.patient_hn||'-')}</td></tr>
+    <tr><td class="l">บริการ</td><td class="v">${esc(b.service_name||'-')}</td></tr>
+    <tr><td class="l">สิทธิ์</td><td class="v">${esc(ins)}</td></tr>
+  </table>
+  <div class="hr"></div>
+  <img class="qr" src="${qrUrl}" alt="QR">
+  <div class="c sm">รหัสนัด ${esc(b.booking_id)}</div>
+  <div class="c note">กรุณามาก่อนเวลานัด 15 นาที<br>พร้อมบัตรประชาชน</div>
+  <div class="c sm" style="margin-top:1.2mm">พิมพ์ ${esc(printedAt)}</div>
+</div></div>
+<script>
+  window.onafterprint=function(){setTimeout(function(){window.close()},300)};
+  window.onload=function(){
+    var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+    Promise.race([ready,new Promise(function(r){setTimeout(r,3000)})]).then(function(){
+      // ถ้าเนื้อหายาวเกิน (ชื่อยาวหลายบรรทัด) ย่อทั้งใบให้พอดี เว้นท้าย 12 มม. ไว้ฉีก
+      var inner=document.querySelector('.in');
+      var avail=(${L}-1-12)*96/25.4, h=inner.getBoundingClientRect().height;
+      if(h>avail)inner.style.transform='scale('+(avail/h).toFixed(3)+')';
+      setTimeout(function(){window.print()},200);
+    });
+  };
+<\/script></body></html>`);
+  w.document.close();
 }
 
 function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
