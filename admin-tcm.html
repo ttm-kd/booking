@@ -157,11 +157,36 @@ async function apiGet(a,p={}){const u=new URL(API);u.searchParams.set('action',a
 async function apiPost(b){return(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(b)})).json()}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-// เวลาจาก Google Sheet บางครั้งมาเป็น ISO string → แปลงให้เป็น HH:MM
+// เวลาจาก Google Sheet บางครั้งมาเป็นวันที่ปี 1899 แบบ ISO เช่น "1899-12-30T04:17:56.000Z"
+// ต้องแปลงกลับด้วยเขตเวลาไทย (Asia/Bangkok) ถ้าอ่านเป็น UTC ตรง ๆ เวลาจะเพี้ยน (11:00 กลายเป็น 04:18)
+const TZ='Asia/Bangkok';
 function safeTime(v){
-  if(!v)return'';const s=String(v);
-  if(s.includes('T')){try{const d=new Date(s);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')}catch(e){}}
-  return s.slice(0,5);
+  if(v==null||v==='')return'';
+  const s=String(v).trim();
+  if(/^\d{1,2}[:.]\d{2}/.test(s)){const[h,m]=s.split(/[:.]/);return h.padStart(2,'0')+':'+m.slice(0,2)}
+  const d=new Date(s);
+  if(isNaN(d))return s;
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(d).map(x=>[x.type,x.value]));
+  let h=+parts.hour,m=+parts.minute;
+  if(+parts.second>=30){m++;if(m===60){m=0;h=(h+1)%24}}
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+// วันที่จาก Sheet อาจมาเป็น ISO (เช่น "2026-09-28T17:00:00.000Z" = 29 ก.ย. เวลาไทย) → แปลงเป็น YYYY-MM-DD ตามเวลาไทย
+function safeDate(v){
+  if(!v)return'';
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const d=new Date(s);
+  if(isNaN(d))return'';
+  return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);
+}
+// หาว่าคิวนี้อยู่ช่องเวลาไหน: ใช้ slot_index ถ้ามี ไม่งั้นเทียบจากเวลาเริ่ม
+function slotOf(b){
+  const idx=Number(b.slot_index);
+  if(idx&&SLOTS.some(s=>s.index===idx))return idx;
+  const t=safeTime(b.time_start);
+  const s=SLOTS.find(x=>x.start===t);
+  return s?s.index:null;
 }
 // วันที่วันนี้ตามเวลาเครื่อง (ไม่ใช้ toISOString เพราะก่อน 7 โมงเช้าจะได้วันของเมื่อวาน)
 function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -219,7 +244,7 @@ function renderTable(bookings){
   for(let p=0;p<MAX;p++){
     html+=`<tr><td class="th-num" style="text-align:center;font-weight:700;vertical-align:middle">${p+1}</td>`;
     SLOTS.forEach(slot=>{
-      const b=bookings.filter(x=>safeTime(x.time_start)===slot.start)[p];
+      const b=bookings.filter(x=>slotOf(x)===slot.index)[p];
       if(b){
         const isWalkin=b.booking_type==='walk-in';
         const ins=insMap[b.insurance_type]||'';
@@ -371,7 +396,7 @@ function switchTab(t){
 const SLIP_ROLL_LEN_MM=120;
 function printCard(bid){
   const b=findBooking(bid);if(!b){alert('ไม่พบข้อมูลการจอง');return}
-  const dateStr=(b.date&&/^\d{4}-\d{2}-\d{2}/.test(String(b.date)))?String(b.date).slice(0,10):(document.getElementById('qDate').value||todayStr);
+  const dateStr=safeDate(b.date)||document.getElementById('qDate').value||todayStr;
   const ins=insMap[b.insurance_type]||b.insurance_type||'-';
   const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&qzone=1&data=${encodeURIComponent(b.booking_id)}`;
   const printedAt=new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
