@@ -183,6 +183,14 @@
       </select>
       <button onclick="printQueueTable()" class="no-print" style="padding:8px 16px;border-radius:var(--rs);background:var(--gold);color:var(--g800);border:none;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🖨️ พิมพ์ตาราง</button>
     </div>
+    <div class="no-print" style="margin:-4px 0 12px;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--g400)">
+      <span style="white-space:nowrap">🧾 กระดาษใบนัด:</span>
+      <select class="fi" id="slipMode" onchange="setSlipMode(this.value)" style="font-size:12px;padding:6px 10px;flex:1">
+        <option value="roll">กระดาษม้วนใบเสร็จ 57/58 มม.</option>
+        <option value="label">สติกเกอร์ 57×38 มม. (มีกระดาษรองหลัง)</option>
+      </select>
+      <button onclick="printTestSlip()" style="padding:6px 12px;border-radius:var(--rs);background:var(--g100,#F3F1ED);color:var(--g800);border:1px solid var(--g200,#E5E2DB);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">ทดสอบพิมพ์</button>
+    </div>
     <div id="queueList"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
   </div>
 
@@ -908,84 +916,196 @@ function showToast(msg) {
 }
 
 // ============================================================
-// PRINT APPOINTMENT CARD
+// PRINT APPOINTMENT SLIP — Thermal printer (Xprinter)
+//   โหมด 'roll'  = กระดาษม้วนใบเสร็จ 57/58 มม. (พื้นที่พิมพ์จริง 48 มม.)
+//   โหมด 'label' = สติกเกอร์ 57 x 38 มม. (มีกระดาษรองหลัง/มีช่องว่างระหว่างดวง)
 // ============================================================
+const SLIP_MODE_KEY = 'ttm_slip_mode';
+function getSlipMode() {
+  try { return localStorage.getItem(SLIP_MODE_KEY) || 'roll'; } catch (e) { return 'roll'; }
+}
+function setSlipMode(m) {
+  try { localStorage.setItem(SLIP_MODE_KEY, m); } catch (e) {}
+  showToast(m === 'label' ? 'ตั้งค่าใบนัด: สติกเกอร์ 57×38 มม.' : 'ตั้งค่าใบนัด: กระดาษม้วน 58 มม.');
+}
+function initSlipModeSelect() {
+  const sel = document.getElementById('slipMode');
+  if (sel) sel.value = getSlipMode();
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// วันที่แบบสั้นสำหรับใบนัด เช่น "พฤ. 1 ต.ค. 2569"
+function slipDateShort(ds) {
+  const [y, m, dd] = String(ds).slice(0, 10).split('-').map(Number);
+  const d = new Date(y, m - 1, dd); // แยกปี/เดือน/วันเอง กันปัญหา timezone ของเครื่อง
+  const dn = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const mn = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${dn[d.getDay()]} ${d.getDate()} ${mn[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+
 function printAppointment(bid) {
   const b = allBookings.find(x => x.booking_id === bid);
   if (!b) { alert('ไม่พบข้อมูลการจอง'); return; }
-
   const queueDate = document.getElementById('queueDate').value || todayStr;
-  const insMap = {'uc':'บัตรทอง (UC/30 บาท)','social_security':'ประกันสังคม','government':'ข้าราชการ/จ่ายตรง','cash':'ชำระเงินเอง','prb':'พ.ร.บ.','other':'อื่นๆ'};
-  const insName = insMap[b.insurance_type] || b.insurance_type || '-';
+  const dateStr = (b.date && /^\d{4}-\d{2}-\d{2}/.test(String(b.date))) ? String(b.date).slice(0, 10) : queueDate;
+  openSlipWindow(b, dateStr, false);
+}
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent('https://ttm-kd.github.io/booking/my-appointments.html?id=' + b.booking_id)}`;
+// พิมพ์ทดสอบ: ใช้ข้อมูลตัวอย่าง + ตีกรอบขอบกระดาษ เพื่อเช็คว่ากระดาษตรง/ไม่ล้น
+function printTestSlip() {
+  const demo = {
+    booking_id: 'TEST-0001', patient_name: 'นางทดสอบ ตัวอย่างยาวมาก นามสกุลยาว',
+    patient_hn: '0012345', time_start: '09:00', time_end: '10:00',
+    provider_name: 'พท.ป. ตัวอย่าง ใจดี', service_name: 'นวดไทยเพื่อการรักษา',
+    insurance_type: 'uc'
+  };
+  openSlipWindow(demo, todayStr, true);
+}
 
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`<!DOCTYPE html>
+function openSlipWindow(b, dateStr, isTest) {
+  const mode = getSlipMode();
+  const insMap = {'uc':'บัตรทอง','social_security':'ประกันสังคม','government':'ข้าราชการ','cash':'ชำระเอง','prb':'พ.ร.บ.','other':'อื่นๆ'};
+  const ins = insMap[b.insurance_type] || b.insurance_type || '-';
+  const e = escHtml;
+  const t1 = safeTime(b.time_start), t2 = safeTime(b.time_end);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&qzone=1&ecc=M&data=${encodeURIComponent('https://ttm-kd.github.io/booking/my-appointments.html?id=' + b.booking_id)}`;
+  const printedAt = new Date().toLocaleString('th-TH', {dateStyle: 'short', timeStyle: 'short'});
+
+  // ---------- CSS ร่วม: ขาวดำล้วน ไม่มีพื้นหลัง (thermal พิมพ์สีเทาไม่สวย) ----------
+  const baseCss = `
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{background:#fff;color:#000}
+    body{font-family:'Sarabun','Tahoma',sans-serif;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    img.qr{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+    .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    @media screen{body{background:#ddd;padding:12px}.slip{background:#fff;margin:0 auto;box-shadow:0 1px 6px rgba(0,0,0,.3)}}
+    @media print{body{padding:0;background:#fff}}
+  `;
+
+  let css, html;
+
+  if (mode === 'label') {
+    // ======== สติกเกอร์ 57 x 38 มม. ========
+    css = baseCss + `
+      @page{size:57mm 38mm;margin:0}
+      html,body{width:57mm;height:38mm;overflow:hidden}
+      .slip{width:57mm;height:38mm;padding:1.8mm 2.2mm 1.5mm;display:flex;flex-direction:column;overflow:hidden;${isTest ? 'outline:0.3mm solid #000;outline-offset:-0.3mm;' : ''}}
+      .hd{font-size:7.5pt;font-weight:700;line-height:1.25;border-bottom:0.3mm solid #000;padding-bottom:0.6mm;display:flex;justify-content:space-between;gap:1mm}
+      .bd{flex:1;display:flex;gap:1.5mm;padding-top:0.8mm;min-height:0}
+      .info{flex:1;min-width:0;line-height:1.22}
+      .nm{font-size:8.5pt;font-weight:700}
+      .sm{font-size:6.8pt}
+      .dt{font-size:8pt;font-weight:700;margin-top:0.3mm}
+      .tm{font-size:10.5pt;font-weight:800;line-height:1.1}
+      .qrbox{width:17mm;text-align:center;flex-shrink:0}
+      .qrbox img{width:17mm;height:17mm}
+      .qrbox .id{font-size:5.8pt;line-height:1.2;margin-top:0.3mm;word-break:break-all}
+      .ft{font-size:6.3pt;font-weight:700;border-top:0.3mm solid #000;padding-top:0.5mm;line-height:1.2;text-align:center}
+    `;
+    html = `
+      <div class="slip">
+        <div class="hd"><span class="ell">ใบนัด แพทย์แผนไทย รพ.ควนโดน</span></div>
+        <div class="bd">
+          <div class="info">
+            <div class="nm ell">${e(b.patient_name || '-')}</div>
+            <div class="sm ell">HN ${e(b.patient_hn || '-')} · ${e(ins)}</div>
+            <div class="dt ell">${slipDateShort(dateStr)}</div>
+            <div class="tm">${e(t1)}–${e(t2)} น.</div>
+            <div class="sm ell">${e(b.service_name || '-')}</div>
+            <div class="sm ell">${e(b.provider_name || '-')}</div>
+          </div>
+          <div class="qrbox"><img class="qr" src="${qrUrl}" alt="QR"><div class="id">${e(b.booking_id)}</div></div>
+        </div>
+        <div class="ft ell">มาก่อนนัด 15 นาที พร้อมบัตรประชาชน</div>
+      </div>`;
+  } else {
+    // ======== กระดาษม้วน 58 มม. (พิมพ์ได้กว้าง 48 มม.) ========
+    css = baseCss + `
+      @page{size:58mm 150mm;margin:0} /* ความสูงจริงจะถูกคำนวณใหม่ตอนพิมพ์ */
+      html,body{width:58mm}
+      .slip{width:58mm;padding:1mm 5mm 0;${isTest ? 'outline:0.3mm solid #000;outline-offset:-0.3mm;' : ''}}
+      .in{width:48mm}
+      .c{text-align:center}
+      .h1{font-size:9pt;font-weight:700;line-height:1.3}
+      .h2{font-size:8pt;line-height:1.3}
+      .ttl{font-size:13pt;font-weight:800;letter-spacing:.5px;margin:1mm 0 0.5mm}
+      .hr{border-top:0.35mm dashed #000;margin:1.5mm 0}
+      .hr.s{border-top-style:solid}
+      .dt{font-size:10.5pt;font-weight:700;line-height:1.3}
+      .tm{font-size:17pt;font-weight:800;line-height:1.15}
+      table{width:100%;border-collapse:collapse}
+      td{font-size:8.5pt;line-height:1.3;padding:0.4mm 0;vertical-align:top}
+      td.l{width:17mm;padding-right:1mm;font-weight:500;white-space:nowrap}
+      td.v{font-weight:700;word-break:break-word}
+      .qr{width:24mm;height:24mm;margin:1mm auto 0.5mm}
+      .sm{font-size:7pt;line-height:1.3}
+      .note{border:0.35mm solid #000;border-radius:1mm;padding:1mm;font-size:8.5pt;font-weight:700;line-height:1.35;margin-top:1.5mm}
+      .tear{height:12mm} /* เผื่อระยะฉีกกระดาษ (หัวพิมพ์→ใบมีดฉีก) */
+    `;
+    html = `
+      <div class="slip"><div class="in">
+        <div class="c h1">คลินิกแพทย์แผนไทย<br>และแพทย์ทางเลือก</div>
+        <div class="c h2">โรงพยาบาลควนโดน จ.สตูล</div>
+        <div class="hr"></div>
+        <div class="c ttl">ใบนัดหมาย</div>
+        <div class="c dt">${formatThaiDate(dateStr)}</div>
+        <div class="c tm">${e(t1)} – ${e(t2)} น.</div>
+        <div class="hr s"></div>
+        <table>
+          <tr><td class="l">ชื่อ</td><td class="v">${e(b.patient_name || '-')}</td></tr>
+          <tr><td class="l">HN</td><td class="v">${e(b.patient_hn || '-')}</td></tr>
+          <tr><td class="l">บริการ</td><td class="v">${e(b.service_name || '-')}</td></tr>
+          <tr><td class="l">ผู้ให้บริการ</td><td class="v">${e(b.provider_name || '-')}</td></tr>
+          <tr><td class="l">สิทธิ์</td><td class="v">${e(ins)}</td></tr>
+        </table>
+        <div class="hr"></div>
+        <img class="qr" src="${qrUrl}" alt="QR">
+        <div class="c sm">สแกนเพื่อดู / ยกเลิกนัด<br>รหัสนัด ${e(b.booking_id)}</div>
+        <div class="c note">กรุณามาก่อนเวลานัด 15 นาที<br>พร้อมบัตรประชาชน</div>
+        <div class="c sm" style="margin-top:1.2mm">พิมพ์ ${e(printedAt)}</div>
+        <div class="tear"></div>
+      </div></div>`;
+  }
+
+  const w = window.open('', '_blank', 'width=420,height=640');
+  if (!w) { alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up สำหรับเว็บนี้'); return; }
+  w.document.write(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<title>ใบนัด ${b.booking_id}</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Sarabun',sans-serif;font-size:14px;color:#252422;padding:20px}
-  .card{max-width:420px;margin:0 auto;border:2px solid #5B6F4A;border-radius:12px;overflow:hidden}
-  .card-header{background:linear-gradient(135deg,#3D4D31,#5B6F4A);color:white;padding:16px 20px;display:flex;align-items:center;gap:14px}
-  .logo{width:50px;height:50px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .logo svg{width:34px;height:34px}
-  .hdr-text h2{font-size:15px;font-weight:700;line-height:1.3}
-  .hdr-text p{font-size:11px;color:rgba(255,255,255,.7)}
-  .card-body{padding:18px 20px}
-  .title{text-align:center;font-size:18px;font-weight:700;color:#5B6F4A;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed #E5E2DB}
-  .row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F3F1ED}
-  .row:last-child{border:none}
-  .label{color:#9C9890;font-size:13px}.value{font-weight:600;font-size:13px;text-align:right}
-  .qr-section{text-align:center;margin-top:14px;padding-top:14px;border-top:2px dashed #E5E2DB}
-  .qr-section img{width:120px;height:120px}
-  .qr-section p{font-size:11px;color:#9C9890;margin-top:4px}
-  .note{background:#FDF3D7;border:1px solid #F5D98A;border-radius:8px;padding:10px;margin-top:14px;font-size:12px;color:#7C6B2D;line-height:1.5;text-align:center}
-  .footer{text-align:center;font-size:10px;color:#C8C4BB;margin-top:14px;padding-top:10px;border-top:1px solid #F3F1ED}
-  @media print{body{padding:0}.card{border:none;border-radius:0}@page{size:A5;margin:10mm}}
-</style></head><body>
-<div class="card">
-  <div class="card-header">
-    <div class="logo">
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="24" r="22" fill="#5B6F4A" opacity=".1"/>
-        <path d="M24 8c-2 4-6 8-6 14a6 6 0 0 0 12 0c0-6-4-10-6-14z" fill="#5B6F4A" opacity=".8"/>
-        <path d="M20 22c-4-2-8-1-10 2s0 7 3 8 8-1 10-4" fill="#8BA9A0" opacity=".7"/>
-        <path d="M28 22c4-2 8-1 10 2s0 7-3 8-8-1-10-4" fill="#8BA9A0" opacity=".7"/>
-        <circle cx="24" cy="22" r="4" fill="#E5B94E"/>
-      </svg>
-    </div>
-    <div class="hdr-text">
-      <h2>คลินิกแพทย์แผนไทย<br>และแพทย์ทางเลือก</h2>
-      <p>โรงพยาบาลควนโดน จ.สตูล</p>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="title">🌿 ใบนัดหมาย</div>
-    <div class="row"><span class="label">รหัสนัด</span><span class="value">${b.booking_id}</span></div>
-    <div class="row"><span class="label">ชื่อ-สกุล</span><span class="value">${b.patient_name||'-'}</span></div>
-    <div class="row"><span class="label">HN</span><span class="value">${b.patient_hn||'-'}</span></div>
-    <div class="row"><span class="label">วันที่</span><span class="value">${formatThaiDate(queueDate)}</span></div>
-    <div class="row"><span class="label">เวลา</span><span class="value">${safeTime(b.time_start)} – ${safeTime(b.time_end)}</span></div>
-    <div class="row"><span class="label">ผู้ให้บริการ</span><span class="value">${b.provider_name||'-'}</span></div>
-    <div class="row"><span class="label">บริการ</span><span class="value">${b.service_name||'-'}</span></div>
-    <div class="row"><span class="label">สิทธิ์การรักษา</span><span class="value">${insName}</span></div>
-    <div class="qr-section">
-      <img src="${qrUrl}" alt="QR Code">
-      <p>สแกนเพื่อดูหรือยกเลิกนัดหมาย</p>
-    </div>
-    <div class="note">⚠️ กรุณามาถึงก่อนเวลานัด 15 นาที พร้อมบัตรประชาชน<br>📍 คลินิกแพทย์แผนไทยฯ โรงพยาบาลควนโดน จ.สตูล</div>
-    <div class="footer">พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')} | ระบบจองคิวออนไลน์ v2.0</div>
-  </div>
-</div>
-<script>window.onload=function(){window.print()}<\/script>
+<title>ใบนัด ${e(b.booking_id)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>${css}</style></head><body>
+${html}
+<script>
+  (function(){
+    var mode = ${JSON.stringify(mode)};
+    function go(){
+      // โหมดม้วน: ตั้งความยาวกระดาษ = ความยาวเนื้อหาจริง ไม่ให้เครื่องป้อนกระดาษเปล่าเกิน
+      if (mode === 'roll') {
+        var h = document.querySelector('.slip').getBoundingClientRect().height;
+        var mm = Math.ceil(h * 25.4 / 96) + 1;
+        var st = document.createElement('style');
+        st.textContent = '@page{size:58mm ' + mm + 'mm;margin:0}';
+        document.head.appendChild(st);
+      }
+      setTimeout(function(){ window.print(); }, 200);
+    }
+    window.onafterprint = function(){ setTimeout(function(){ window.close(); }, 300); };
+    window.onload = function(){
+      var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      // รอฟอนต์ไทยโหลดครบ (สูงสุด 3 วิ) ก่อนสั่งพิมพ์ ไม่งั้นจะได้ฟอนต์สำรอง
+      Promise.race([fontsReady, new Promise(function(r){ setTimeout(r, 3000); })]).then(go);
+    };
+  })();
+<\/script>
 </body></html>`);
-  printWindow.document.close();
+  w.document.close();
 }
 
 document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', initSlipModeSelect);
 </script>
 </body>
 </html>
