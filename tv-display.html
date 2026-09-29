@@ -3,65 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>จอแสดงคิว — คลินิกแพทย์แผนไทยฯ รพ.ควนโดน</title>
+<title>จอแสดงคิว — แพทย์แผนไทย · แพทย์แผนจีน รพ.ควนโดน</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Prompt:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
     --bg:#F7F5F0;--panel:#FFFFFF;--line:#E5E1D8;
     --ink:#2E2B26;--ink-soft:#6B655B;--muted:#9A948A;
-    --accent:#5A7355;
     --wait:#A67C3D;--wait-bg:#FAF4E9;--wait-br:#E8DCC4;
     --active:#4C7A5A;--active-bg:#EDF4EE;--active-br:#BFD6C4;
+    --ttm:#5A7355;--ttm-lt:#EEF3EC;
+    --tcm:#8B4513;--tcm-lt:#F5E6D3;
+    --row-h:8.6vh;--gap:1vh;
   }
   html,body{height:100%;overflow:hidden}
   body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;flex-direction:column}
 
   /* header */
-  header{display:flex;align-items:center;justify-content:space-between;padding:2vh 3vw;background:var(--panel);border-bottom:1px solid var(--line)}
+  header{display:flex;align-items:center;justify-content:space-between;padding:1.6vh 2.5vw;background:var(--panel);border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:1.2vw}
-  .brand-logo{font-size:3vw}
-  .brand-txt h1{font-family:'Prompt',sans-serif;font-size:2vw;font-weight:600;color:var(--accent);line-height:1.15}
-  .brand-txt p{font-size:1.05vw;color:var(--muted);margin-top:.2vh}
+  .brand-logo{font-size:5.5vh}
+  .brand-txt h1{font-family:'Prompt',sans-serif;font-size:3.5vh;font-weight:600;color:var(--ttm);line-height:1.15}
+  .brand-txt p{font-size:2vh;color:var(--muted);margin-top:.2vh}
   .clock{text-align:right}
-  .clock-time{font-family:'Prompt',sans-serif;font-size:2.8vw;font-weight:600;color:var(--ink);line-height:1;letter-spacing:.5px}
-  .clock-date{font-size:1.05vw;color:var(--muted);margin-top:.4vh}
+  .clock-time{font-family:'Prompt',sans-serif;font-size:5vh;font-weight:600;line-height:1}
+  .clock-date{font-size:2vh;color:var(--muted);margin-top:.4vh}
 
-  /* main */
-  main{flex:1;padding:2vh 3vw;display:flex;flex-direction:column;overflow:hidden}
-  .col-head{display:grid;grid-template-columns:14% 40% 26% 20%;gap:1vw;padding:1.2vh 2vw;font-family:'Prompt',sans-serif;font-size:1.35vw;font-weight:500;color:var(--muted);margin-bottom:1vh}
+  /* layout: แผนไทย 2 ส่วน · แผนจีน 1 ส่วน */
+  main{flex:1;padding:1.6vh 2vw;display:grid;grid-template-columns:1.8fr 1fr;gap:1.4vw;min-height:0}
+  .clinic{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .c-head{display:flex;align-items:center;justify-content:space-between;padding:1.3vh 1.4vw;color:#fff}
+  .ttm .c-head{background:var(--ttm)}
+  .tcm .c-head{background:var(--tcm)}
+  .c-title{font-family:'Prompt',sans-serif;font-size:3vh;font-weight:600;display:flex;align-items:center;gap:.8vw}
+  .c-count{font-size:2vh;font-weight:500;opacity:.92;white-space:nowrap}
+  .c-count b{font-family:'Prompt',sans-serif;font-size:2.6vh}
 
-  .queue{flex:1;display:flex;flex-direction:column;gap:1vh;overflow:hidden}
-  .qrow{display:grid;grid-template-columns:14% 40% 26% 20%;gap:1vw;align-items:center;padding:1.7vh 2vw;border-radius:12px;background:var(--panel);border:1px solid var(--line);transition:all .4s}
+  .col-head,.qrow{display:grid;gap:1vw;align-items:center}
+  .ttm .col-head,.ttm .qrow{grid-template-columns:13% 1fr 26% 20%}
+  .tcm .col-head,.tcm .qrow{grid-template-columns:19% 1fr 32%}
+  .tcm .q-status{font-size:2vh;padding:.8vh .3vw;gap:.35vw}
+  .tcm .q-name .nm{font-size:3.3vh}
+  .col-head{padding:1vh 1.2vw .6vh;font-family:'Prompt',sans-serif;font-size:1.9vh;font-weight:500;color:var(--muted)}
+
+  .queue{flex:1;display:flex;flex-direction:column;gap:var(--gap);padding:0 .8vw .8vh;overflow:hidden;min-height:0}
+  .qrow{height:var(--row-h);flex-shrink:0;padding:0 1.2vw;border-radius:10px;border:1px solid var(--line);background:var(--panel)}
   .qrow.active{background:var(--active-bg);border-color:var(--active-br)}
-  .qrow.wait{background:var(--panel)}
+  .qrow.new{animation:flash 1.2s ease-in-out 4}
+  @keyframes flash{0%,100%{background:var(--active-bg)}50%{background:#CDE8D3}}
 
-  .q-time{font-family:'Prompt',sans-serif;font-size:2vw;font-weight:600;color:var(--ink-soft)}
-  .q-name{font-size:2.1vw;font-weight:700;color:var(--ink)}
-  .q-name .svc{display:block;font-size:1.1vw;font-weight:400;color:var(--muted);margin-top:.2vh}
-  .q-prov{font-size:1.75vw;font-weight:500;color:var(--ink-soft);display:flex;align-items:center;gap:.7vw}
-  .q-prov-ic{width:2.5vw;height:2.5vw;border-radius:50%;background:var(--bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.2vw;font-weight:600;flex-shrink:0;border:1px solid var(--line)}
-  .q-status{font-family:'Prompt',sans-serif;font-size:1.45vw;font-weight:500;padding:.9vh 1.2vw;border-radius:100px;text-align:center;display:flex;align-items:center;justify-content:center;gap:.5vw;border:1px solid transparent}
+  .q-time{font-family:'Prompt',sans-serif;font-size:3.3vh;font-weight:600;color:var(--ink-soft)}
+  .q-name{min-width:0}
+  .q-name .nm{display:block;font-size:3.5vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+  .q-name .svc{display:block;font-size:1.9vh;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .q-prov{font-size:2.7vh;font-weight:500;color:var(--ink-soft);display:flex;align-items:center;gap:.6vw;min-width:0}
+  .q-prov span.t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .q-prov-ic{width:4.2vh;height:4.2vh;border-radius:50%;background:var(--bg);color:var(--ttm);display:flex;align-items:center;justify-content:center;font-size:2.1vh;font-weight:600;flex-shrink:0;border:1px solid var(--line)}
+  .q-status{font-family:'Prompt',sans-serif;font-size:2.3vh;font-weight:500;padding:.8vh .6vw;border-radius:100px;text-align:center;display:flex;align-items:center;justify-content:center;gap:.5vw;border:1px solid transparent;white-space:nowrap}
   .q-status.wait{background:var(--wait-bg);color:var(--wait);border-color:var(--wait-br)}
   .q-status.active{background:#fff;color:var(--active);border-color:var(--active-br)}
-  .dot{width:.9vw;height:.9vw;border-radius:50%;flex-shrink:0}
+  .dot{width:1.5vh;height:1.5vh;border-radius:50%;flex-shrink:0}
   .dot.wait{background:var(--wait)}
   .dot.active{background:var(--active);animation:pulse 1.8s ease-in-out infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
-  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:1.6vh}
-  .empty-ic{font-size:6vw;opacity:.35}
-  .empty-t{font-size:2.1vw;font-weight:600;color:var(--ink-soft)}
-  .empty-s{font-size:1.3vw}
+  .pager{height:3.2vh;display:flex;align-items:center;justify-content:center;gap:.6vw;font-size:1.8vh;color:var(--muted)}
+  .pg-dot{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--line)}
+  .pg-dot.on{background:var(--ink-soft)}
 
-  /* footer */
-  footer{padding:1.3vh 3vw;background:var(--panel);display:flex;align-items:center;justify-content:space-between;font-size:1.05vw;color:var(--muted);border-top:1px solid var(--line)}
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:1.4vh;text-align:center;padding:2vh}
+  .empty-ic{font-size:9vh;opacity:.35}
+  .empty-t{font-size:3.2vh;font-weight:600;color:var(--ink-soft)}
+  .empty-s{font-size:2.1vh}
+
+  footer{padding:1.1vh 2.5vw;background:var(--panel);display:flex;align-items:center;justify-content:space-between;font-size:1.9vh;color:var(--muted);border-top:1px solid var(--line)}
   .legend-tv{display:flex;gap:2vw}
   .lg{display:flex;align-items:center;gap:.6vw}
   .updated{display:flex;align-items:center;gap:.6vw}
-  .live-dot{width:.8vw;height:.8vw;border-radius:50%;background:var(--active);animation:pulse 1.8s ease-in-out infinite}
-
-  .count-badge{background:var(--accent);color:#fff;font-family:'Prompt',sans-serif;font-size:1.2vw;font-weight:600;padding:.3vh 1.2vw;border-radius:100px;margin-left:1vw}
+  .live-dot{width:1.4vh;height:1.4vh;border-radius:50%;background:var(--active);animation:pulse 1.8s ease-in-out infinite}
+  .live-dot.err{background:#C0392B;animation:none}
 </style>
 </head>
 <body>
@@ -69,7 +89,7 @@
   <div class="brand">
     <div class="brand-logo">🌿</div>
     <div class="brand-txt">
-      <h1>คลินิกแพทย์แผนไทยและแพทย์ทางเลือก</h1>
+      <h1>คลินิกแพทย์แผนไทย แพทย์ทางเลือก และแพทย์แผนจีน</h1>
       <p>โรงพยาบาลควนโดน จ.สตูล · คิววันนี้</p>
     </div>
   </div>
@@ -80,15 +100,25 @@
 </header>
 
 <main>
-  <div class="col-head">
-    <div>เวลานัด</div>
-    <div>ชื่อผู้รับบริการ</div>
-    <div>ผู้ให้บริการ</div>
-    <div style="text-align:center">สถานะ</div>
-  </div>
-  <div class="queue" id="queue">
-    <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">กำลังโหลดคิว...</div></div>
-  </div>
+  <section class="clinic ttm">
+    <div class="c-head">
+      <div class="c-title">🌿 แพทย์แผนไทย</div>
+      <div class="c-count" id="ttmCount"></div>
+    </div>
+    <div class="col-head"><div>เวลานัด</div><div>ชื่อผู้รับบริการ</div><div>ผู้ให้บริการ</div><div style="text-align:center">สถานะ</div></div>
+    <div class="queue" id="ttmQueue"><div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">กำลังโหลดคิว...</div></div></div>
+    <div class="pager" id="ttmPager"></div>
+  </section>
+
+  <section class="clinic tcm">
+    <div class="c-head">
+      <div class="c-title">🏮 แพทย์แผนจีน</div>
+      <div class="c-count" id="tcmCount"></div>
+    </div>
+    <div class="col-head"><div>เวลานัด</div><div>ชื่อผู้รับบริการ</div><div style="text-align:center">สถานะ</div></div>
+    <div class="queue" id="tcmQueue"><div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">กำลังโหลดคิว...</div></div></div>
+    <div class="pager" id="tcmPager"></div>
+  </section>
 </main>
 
 <footer>
@@ -96,13 +126,20 @@
     <div class="lg"><span class="dot active" style="animation:none"></span> กำลังรับบริการ</div>
     <div class="lg"><span class="dot wait"></span> รอเรียก</div>
   </div>
-  <div class="updated"><span class="live-dot"></span> อัปเดตล่าสุด <span id="updated">—</span> · รีเฟรชอัตโนมัติทุก 15 วินาที</div>
+  <div class="updated"><span class="live-dot" id="liveDot"></span> อัปเดตล่าสุด <span id="updated">—</span> · รีเฟรชอัตโนมัติทุก 15 วินาที</div>
 </footer>
 
 <script>
-const API='https://script.google.com/macros/s/AKfycbzXCZF4t1x_3A9LMz3FyhiOPxbCMdMT4qg2tyLTcco_pfLYTBlz21SyiPa6C5K9zivETA/exec';
-const REFRESH_MS=15000;
+// ===== ตั้งค่า =====
+const CLINICS = {
+  ttm: { api: 'https://script.google.com/macros/s/AKfycbzXCZF4t1x_3A9LMz3FyhiOPxbCMdMT4qg2tyLTcco_pfLYTBlz21SyiPa6C5K9zivETA/exec', showProvider: true },
+  tcm: { api: 'https://script.google.com/macros/s/AKfycby_9sZ_k-wlWTxR9fhPgky7ICbTsgJWUd1WVqOLU_K5twn-Oybr4P1rO-3rHKo_tfuFyQ/exec', showProvider: false },
+};
+const REFRESH_MS = 15000;   // ดึงข้อมูลใหม่ทุก 15 วินาที
+const PAGE_MS = 8000;       // ถ้าคิวยาวเกินจอ สลับหน้าทุก 8 วินาที
+const ACTIVE = 'กำลังรับบริการ';
 
+// ===== นาฬิกา =====
 function tickClock(){
   const now=new Date();
   document.getElementById('clock').textContent=now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
@@ -112,43 +149,127 @@ function tickClock(){
 }
 setInterval(tickClock,1000);tickClock();
 
-function initials(name){
-  // ผู้ให้บริการ → เอาตัวอักษรแรก
-  return (name||'?').trim().charAt(0);
+// ===== ตัวช่วย =====
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+// เวลาอาจมาเป็น "09:00" หรือเป็นวันที่ปี 1899 (ISO/ข้อความยาว) → แปลงเป็นเวลาไทย HH:MM
+function safeTime(v){
+  if(v==null||v==='')return'';
+  const s=String(v).trim();
+  if(/^\d{1,2}[:.]\d{2}/.test(s)){const[h,m]=s.split(/[:.]/);return h.padStart(2,'0')+':'+m.slice(0,2)}
+  const d=new Date(s);if(isNaN(d))return s;
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(d).map(x=>[x.type,x.value]));
+  let h=+p.hour,m=+p.minute;if(+p.second>=30){m++;if(m===60){m=0;h=(h+1)%24}}
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
 }
 
-async function loadQueue(){
+// ย่อชื่อ "รุษมานีย์ ขุนแผน" → "รุษมานีย์ ข." (ถ้าระบบส่งมาย่อแล้วก็ได้ผลเหมือนเดิม)
+const NAME_PREFIX=/^(นาย|นาง|นางสาว|น\.ส\.|ด\.ช\.|ด\.ญ\.|เด็กชาย|เด็กหญิง|mr\.?|mrs\.?|ms\.?|miss)$/i;
+function shortName(full){
+  const parts=String(full||'').trim().replace(/^(นางสาว|น\.ส\.|ด\.ช\.|ด\.ญ\.|เด็กชาย|เด็กหญิง)(?=[ก-ฮ])/,'').split(/\s+/).filter(Boolean);
+  while(parts.length>1&&NAME_PREFIX.test(parts[0]))parts.shift();
+  if(!parts.length)return'-';
+  if(parts.length===1)return parts[0];
+  const m=parts[parts.length-1].match(/[ก-ฮA-Za-z]/);
+  return parts[0]+(m?' '+m[0]+'.':'');
+}
+
+// ===== สถานะของแต่ละคลินิก =====
+const state={};
+Object.keys(CLINICS).forEach(k=>state[k]={items:[],page:0,ok:null,prevActive:new Set(),newKeys:new Set(),loaded:false});
+
+function rowKey(it){return safeTime(it.time_start)+'|'+(it.patient_name||'')+'|'+(it.provider_name||'')}
+
+async function loadClinic(key){
+  const c=CLINICS[key], st=state[key];
   try{
-    const u=new URL(API);u.searchParams.set('action','getTodayQueue');
+    const u=new URL(c.api);u.searchParams.set('action','getTodayQueue');
     const res=await(await fetch(u,{redirect:'follow'})).json();
-    const box=document.getElementById('queue');
-    if(!res.success){box.innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">เชื่อมต่อไม่ได้</div></div>';return}
-
-    const q=res.queue||[];
-    document.getElementById('updated').textContent=res.updated||'';
-
-    if(!q.length){
-      box.innerHTML='<div class="empty"><div class="empty-ic">✅</div><div class="empty-t">ไม่มีคิวที่รอรับบริการ</div><div class="empty-s">คิวที่รอและกำลังให้บริการจะแสดงที่นี่</div></div>';
-      return;
-    }
-
-    box.innerHTML=q.map(item=>{
-      const isActive=item.service_status==='กำลังรับบริการ';
-      const cls=isActive?'active':'wait';
-      const statusTxt=isActive?'กำลังรับบริการ':'รอเรียก';
-      return `<div class="qrow ${cls}">
-        <div class="q-time">${item.time_start}</div>
-        <div class="q-name">${item.patient_name}<span class="svc">${item.service_name||''}</span></div>
-        <div class="q-prov"><span class="q-prov-ic">${initials(item.provider_name)}</span>${item.provider_name||'-'}</div>
-        <div class="q-status ${cls}"><span class="dot ${cls}"></span>${statusTxt}</div>
-      </div>`;
-    }).join('');
+    if(!res.success)throw new Error(res.error||'error');
+    const items=(res.queue||[])
+      .filter(it=>it.service_status!=='เสร็จแล้ว')
+      .map(it=>({...it,time:safeTime(it.time_start),name:shortName(it.patient_name),active:it.service_status===ACTIVE}))
+      .sort((a,b)=>(b.active-a.active)||a.time.localeCompare(b.time));
+    // คิวที่เพิ่งถูกเรียก → กะพริบให้สังเกตเห็น (ไม่กะพริบตอนเปิดจอครั้งแรก)
+    const nowActive=new Set(items.filter(i=>i.active).map(rowKey));
+    st.newKeys=st.loaded?new Set([...nowActive].filter(k=>!st.prevActive.has(k))):new Set();
+    st.prevActive=nowActive;
+    st.items=items;st.ok=true;st.loaded=true;
   }catch(e){
-    document.getElementById('queue').innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">เชื่อมต่อไม่ได้</div><div class="empty-s">กำลังลองใหม่...</div></div>';
+    st.ok=false;
+    console.warn(key,e);
   }
+  render(key);
 }
-loadQueue();
-setInterval(loadQueue,REFRESH_MS);
+
+function perPage(key){
+  const box=document.getElementById(key+'Queue');
+  const h=box.clientHeight, vh=window.innerHeight/100;
+  const rowH=8.6*vh, gap=1*vh;
+  return Math.max(1,Math.floor((h-0.8*vh+gap)/(rowH+gap)));
+}
+
+function render(key){
+  const c=CLINICS[key], st=state[key];
+  const box=document.getElementById(key+'Queue');
+  const pager=document.getElementById(key+'Pager');
+  const cnt=document.getElementById(key+'Count');
+
+  if(st.ok===false&&!st.items.length){
+    box.innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">เชื่อมต่อไม่ได้</div><div class="empty-s">กำลังลองใหม่...</div></div>';
+    pager.innerHTML='';cnt.textContent='';return;
+  }
+  const items=st.items;
+  const nActive=items.filter(i=>i.active).length;
+  cnt.innerHTML=`กำลังรับบริการ <b>${nActive}</b> · รอ <b>${items.length-nActive}</b>`;
+
+  if(!items.length){
+    box.innerHTML='<div class="empty"><div class="empty-ic">✅</div><div class="empty-t">ไม่มีคิวที่รอรับบริการ</div></div>';
+    pager.innerHTML='';return;
+  }
+
+  const pp=perPage(key);
+  const pages=Math.ceil(items.length/pp);
+  if(st.page>=pages)st.page=0;
+  const slice=items.slice(st.page*pp,st.page*pp+pp);
+
+  box.innerHTML=slice.map(it=>{
+    const cls=it.active?'active':'wait';
+    const isNew=it.active&&st.newKeys.has(rowKey(it));
+    const prov=c.showProvider
+      ?`<div class="q-prov"><span class="q-prov-ic">${esc((it.provider_name||'?').trim().charAt(0))}</span><span class="t">${esc(it.provider_name||'-')}</span></div>`
+      :'';
+    return `<div class="qrow ${cls}${isNew?' new':''}">
+      <div class="q-time">${esc(it.time)}</div>
+      <div class="q-name"><span class="nm">${esc(it.name)}</span><span class="svc">${esc(it.service_name||'')}</span></div>
+      ${prov}
+      <div class="q-status ${cls}"><span class="dot ${cls}"></span>${it.active?'กำลังรับบริการ':'รอเรียก'}</div>
+    </div>`;
+  }).join('');
+
+  pager.innerHTML=pages>1
+    ?`หน้า ${st.page+1}/${pages} `+Array.from({length:pages},(_,i)=>`<span class="pg-dot${i===st.page?' on':''}"></span>`).join('')
+    :'';
+}
+
+async function refreshAll(){
+  await Promise.all(Object.keys(CLINICS).map(loadClinic));
+  const allOk=Object.values(state).every(s=>s.ok);
+  document.getElementById('liveDot').classList.toggle('err',!allOk);
+  document.getElementById('updated').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+(allOk?'':' (บางส่วนเชื่อมต่อไม่ได้)');
+}
+
+// สลับหน้าเมื่อคิวยาวเกินจอ
+setInterval(()=>{
+  Object.keys(CLINICS).forEach(k=>{
+    const st=state[k];const pages=Math.ceil(st.items.length/perPage(k));
+    if(pages>1){st.page=(st.page+1)%pages;st.newKeys=new Set();render(k)}
+  });
+},PAGE_MS);
+window.addEventListener('resize',()=>Object.keys(CLINICS).forEach(render));
+
+refreshAll();
+setInterval(refreshAll,REFRESH_MS);
 </script>
 </body>
 </html>
