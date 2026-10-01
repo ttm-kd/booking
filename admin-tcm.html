@@ -19,7 +19,7 @@
     .tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;color:var(--g400);cursor:pointer;border-bottom:3px solid transparent;transition:all var(--tr)}
     .tab.on{color:var(--pri);border-bottom-color:var(--pri);background:var(--pri-lt)}
     .panel{display:none;padding:16px}.panel.on{display:block}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
     .stat{background:#fff;border-radius:var(--r);padding:12px;text-align:center;border:1px solid var(--g200)}
     .stat-n{font-size:22px;font-weight:700}.stat-l{font-size:11px;color:var(--g500)}
     .fi{width:100%;padding:12px;border:2px solid var(--g200);border-radius:var(--rs);font-size:16px;font-family:inherit;color:var(--g800);background:var(--white)}
@@ -51,6 +51,15 @@
     .fl{display:block;font-size:14px;font-weight:600;margin-bottom:4px;color:var(--g700)}
     .legend{font-size:12px;color:var(--g400);text-align:center;margin-top:8px}
     .hidden{display:none!important}
+    /* v3 */
+    .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .win-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 10px;font-size:12px;line-height:1.45;text-align:right;color:#fff}
+    .win-badge b{color:#FDE68A}
+    .td-advance{background:#EEF2FF}
+    .date-note{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:var(--rs);padding:16px;text-align:center;font-size:14px;line-height:1.7;margin-bottom:12px}
+    .conflict{background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--rs);padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.6;color:#7F1D1D}
+    .conflict table{width:100%;border-collapse:collapse;margin-top:6px;background:#fff}
+    .conflict td,.conflict th{border:1px solid #FECACA;padding:4px 6px;text-align:left}
     .p-status{display:block;font-size:11px;font-weight:700;margin-top:2px}
     td.st-active{box-shadow:inset 0 0 0 2px #5BD98A}
     td.st-active .p-status{color:#166534}
@@ -81,7 +90,10 @@
 <body>
   <div class="hdr">
     <div><h1>🏥 Admin แพทย์แผนจีน</h1><p>โรงพยาบาลควนโดน จ.สตูล</p></div>
-    <div class="hdr-tag">ADMIN</div>
+    <div class="hdr-right">
+      <div class="hdr-tag">ADMIN</div>
+      <div class="win-badge" id="winBadge">📅 กำลังโหลดช่วงเปิดนัด…</div>
+    </div>
   </div>
   <div class="tabs">
     <div class="tab on" data-t="queue" onclick="switchTab('queue')">📋 ดูคิว</div>
@@ -101,7 +113,9 @@
       <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
       <div class="stat"><div class="stat-n" id="stOnline" style="color:var(--pri)">-</div><div class="stat-l">จองออนไลน์</div></div>
       <div class="stat"><div class="stat-n" id="stWalkin" style="color:var(--gold)">-</div><div class="stat-l">Walk-in</div></div>
+      <div class="stat"><div class="stat-n" id="stAdvance" style="color:#4F46E5">-</div><div class="stat-l">นัดล่วงหน้า</div></div>
     </div>
+    <div id="conflictBox"></div>
     <div id="queueTable"><div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div></div>
   </div>
 
@@ -202,8 +216,33 @@ async function init(){
   todayStr=localDateStr(new Date());
   document.getElementById('qDate').value=todayStr;
   updateDateLabel();
+  await loadBookingWindow();
   loadQueue();
   loadFormOptions();
+}
+
+// ============ v3: ช่วงเปิดนัด 30 วัน + วันหยุด/แพทย์ลา ============
+let winInfo=null;
+function addDays(iso,n){const[y,m,d]=iso.split('-').map(Number);return localDateStr(new Date(y,m-1,d+n))}
+function shortThai(iso){const[y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);const dn=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return`${dn[dt.getDay()]} ${d} ${mn[m-1]} ${String(y+543).slice(2)}`}
+async function loadBookingWindow(){
+  const badge=document.getElementById('winBadge');
+  try{
+    const r=await apiGet('getBookingWindow');
+    if(!r.success)throw new Error(r.error);
+    winInfo=r;
+    badge.innerHTML=`📅 เปิดนัดถึง <b>${shortThai(r.max_date)}</b>`;
+    badge.title='หน้า admin นัดล่วงหน้าได้ '+r.admin_days+' วัน · วันอาทิตย์และวันในชีต Settings จองไม่ได้';
+    const inp=document.getElementById('qDate');
+    inp.min=addDays(r.today,-r.keep_days); inp.max=r.max_date;
+    const box=document.getElementById('conflictBox');
+    box.innerHTML=r.conflicts&&r.conflicts.length?`<div class="conflict">⚠️ <b>มีคนไข้ ${r.conflicts.length} รายนัดในวันหยุด/วันแพทย์ลา</b> — กรุณาโทรเลื่อนนัด
+      <table><tr><th>วันที่</th><th>เวลา</th><th>ผู้ป่วย</th><th>โทร</th></tr>${r.conflicts.map(c=>`<tr><td>${shortThai(c.date)}</td><td>${esc(c.time_start)}</td><td>${esc(c.patient_name)}</td><td>${esc(c.patient_phone||'-')}</td></tr>`).join('')}</table></div>`:'';
+  }catch(e){badge.textContent='📅 โหลดช่วงเปิดนัดไม่สำเร็จ'}
+}
+function isClosedDate(ds){
+  if(winInfo&&winInfo.closed_dates&&winInfo.closed_dates.includes(ds))return true;
+  const[y,m,d]=ds.split('-').map(Number);return new Date(y,m-1,d).getDay()===0;
 }
 
 function updateDateLabel(){
@@ -213,7 +252,10 @@ function updateDateLabel(){
 function changeDate(n){
   const el=document.getElementById('qDate');
   const[y,m,d]=(el.value||todayStr).split('-').map(Number);
-  el.value=localDateStr(new Date(y,m-1,d+n));
+  let next=localDateStr(new Date(y,m-1,d+n));
+  if(el.max&&next>el.max)next=el.max;
+  if(el.min&&next<el.min)next=el.min;
+  el.value=next;
   updateDateLabel();loadQueue();
 }
 function goToday(){document.getElementById('qDate').value=todayStr;updateDateLabel();loadQueue()}
@@ -221,6 +263,11 @@ function goToday(){document.getElementById('qDate').value=todayStr;updateDateLab
 async function loadQueue(){
   const dateStr=document.getElementById('qDate').value||todayStr;
   const box=document.getElementById('queueTable');
+  if(winInfo){
+    const clear=()=>['stTotal','stOnline','stWalkin','stAdvance'].forEach(id=>document.getElementById(id).textContent='-');
+    if(dateStr>winInfo.max_date){clear();box.innerHTML=`<div class="date-note">📅 วันนี้เกินช่วงเปิดนัด<br>หน้า admin นัดล่วงหน้าได้ถึง <b>${shortThai(winInfo.max_date)}</b> (${winInfo.admin_days} วัน)</div>`;return}
+    if(dateStr<addDays(winInfo.today,-winInfo.keep_days)){clear();box.innerHTML=`<div class="date-note">🗂️ ข้อมูลนัดของวันนี้ถูกลบแล้ว<br>ระบบเก็บย้อนหลัง ${winInfo.keep_days} วัน · ดูได้จาก HosXP หรือตารางพิมพ์สำรอง</div>`;return}
+  }
   box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
   try{
     const res=await apiGet('getBookings',{date:dateStr});
@@ -234,6 +281,8 @@ function renderTable(bookings){
   const box=document.getElementById('queueTable');
   const dateStr=document.getElementById('qDate').value||todayStr;
   const isPast=dateStr<todayStr;
+  const isClosed=isClosedDate(dateStr);
+  document.getElementById('stAdvance').textContent=bookings.filter(b=>b.booking_type==='advance').length;
   document.getElementById('stTotal').textContent=bookings.length;
   document.getElementById('stOnline').textContent=bookings.filter(b=>b.booking_type==='online').length;
   document.getElementById('stWalkin').textContent=bookings.filter(b=>b.booking_type==='walk-in').length;
@@ -256,7 +305,7 @@ function renderTable(bookings){
         const ins=insMap[b.insurance_type]||'';
         const st=STATUS_MAP[b.service_status]||STATUS_MAP['รอเรียก'];
         const stName=STATUS_MAP[b.service_status]?b.service_status:'รอเรียก';
-        html+=`<td class="${isWalkin?'td-walkin':'td-booked'} ${st.cls}" onclick="viewDetail('${esc(b.booking_id)}')" style="cursor:pointer">
+        html+=`<td class="${isWalkin?'td-walkin':(b.booking_type==='advance'?'td-advance':'td-booked')} ${st.cls}" onclick="viewDetail('${esc(b.booking_id)}')" style="cursor:pointer">
           <span class="p-name">${esc(b.patient_name||'-')}</span>
           <span class="p-svc">${esc(b.service_name||'')}</span>
           ${ins?`<span class="p-ins">${esc(ins)}</span>`:''}
@@ -267,7 +316,7 @@ function renderTable(bookings){
             <button class="p-btn" style="background:#FEF2F2;color:var(--red)" onclick="event.stopPropagation();cancelBk('${esc(b.booking_id)}')">❌</button>
           </div>
         </td>`;
-      }else if(isPast){
+      }else if(isPast||isClosed){
         html+='<td class="td-past"></td>';
       }else{
         html+=`<td class="td-free" onclick="openQuickBook(${slot.index})" title="เพิ่มคิว ${slot.start}-${slot.end}"><span class="free-plus">+</span></td>`;
@@ -276,7 +325,8 @@ function renderTable(bookings){
     html+='</tr>';
   }
   html+='</table></div>';
-  html+='<div class="legend">🟢 จองออนไลน์ · 🟠 Walk-in · <b>+</b> กดเพื่อเพิ่มคิว · <b>▶ เรียก</b> แล้วชื่อจะขึ้นจอทีวีเป็นสีเขียว · กดที่ชื่อเพื่อดูรายละเอียด</div>';
+  if(isClosed&&!isPast)html='<div class="date-note">⛔ วันนี้คลินิกปิด / วันหยุด / แพทย์ลา — จองเพิ่มไม่ได้</div>'+html;
+  html+='<div class="legend">🟢 จองออนไลน์ · 🟠 Walk-in · 🟣 นัดล่วงหน้า · <b>+</b> กดเพื่อเพิ่มคิว · <b>▶ เรียก</b> แล้วชื่อจะขึ้นจอทีวีเป็นสีเขียว · กดที่ชื่อเพื่อดูรายละเอียด</div>';
   box.innerHTML=html;
 }
 
@@ -376,6 +426,7 @@ async function submitQuickBook(){
       patient_phone:document.getElementById('qbPhone').value.trim(),
       insurance_type:document.getElementById('qbIns').value,
       notes:document.getElementById('qbNote').value.trim(),
+      booking_type:qbCtx.dateStr===todayStr?'walk-in':'advance',
     });
     if(res.success){
       document.getElementById('qbModal').classList.add('hidden');

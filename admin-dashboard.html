@@ -30,7 +30,7 @@
     .panel{display:none;padding:16px}.panel.on{display:block}
 
     /* STATS ROW */
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
     .stat{background:#fff;border-radius:var(--r);padding:12px;text-align:center;border:1px solid var(--g200)}
     .stat-n{font-size:22px;font-weight:700}.stat-l{font-size:11px;color:var(--g500)}
 
@@ -130,6 +130,37 @@
     .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g800);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;z-index:200;animation:fadeUp .3s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     .hidden{display:none!important}
+    /* v3 */
+    .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .win-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 10px;font-size:12px;line-height:1.45;text-align:right;max-width:240px}
+    .win-badge b{color:#FDE68A}
+    .win-badge .warn{color:#FECACA;font-weight:700}
+    .td-advance{background:#EEF2FF!important}
+    .slot-series{display:inline-block;font-size:10px;font-weight:700;background:#E0E7FF;color:#3730A3;border-radius:6px;padding:0 6px;margin-top:2px}
+    .slot-last{display:block;font-size:10px;font-weight:700;color:#B91C1C;background:#FEE2E2;border-radius:6px;padding:1px 6px;margin-top:2px}
+    .tool-row{display:flex;gap:8px;margin-bottom:12px}
+    .tool-btn{flex:1;padding:9px 10px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-family:inherit;font-size:13px;font-weight:700;color:var(--g700);cursor:pointer}
+    .tool-btn:hover{background:var(--g50)}
+    .date-note{background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:var(--rs);padding:16px;text-align:center;font-size:14px;line-height:1.7}
+    .modal.wide{max-width:760px}
+    .sr-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+    .sr-g{padding:10px 6px;border-radius:var(--rs);border:2px solid var(--g200);background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;line-height:1.35;color:var(--g700)}
+    .sr-g small{font-weight:500;color:var(--g500);font-size:11px}
+    .sr-g.on{border-color:var(--forest);background:var(--pri-lt);color:var(--forest-dk,#3D4D31)}
+    .sr-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+    .sr-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:620px}
+    .sr-tbl th{background:var(--cream);padding:6px;border:1px solid var(--g200);font-size:12px}
+    .sr-tbl td{padding:5px;border:1px solid var(--g200);vertical-align:middle}
+    .sr-tbl .fi{padding:6px 8px;font-size:13px}
+    .sr-tbl tr.bad td{background:#FEF2F2}
+    .sr-tbl tr.alt td{background:#FFFBEB}
+    .sr-st{font-size:12px;font-weight:700}
+    .sr-del{border:none;background:none;color:var(--red);font-size:16px;cursor:pointer}
+    .res-list{font-size:13px;line-height:1.7}
+    .res-list table{width:100%;border-collapse:collapse;margin-top:6px}
+    .res-list td,.res-list th{border:1px solid var(--g200);padding:4px 6px;text-align:left}
+    .res-list th{background:var(--cream)}
+    @media(min-width:600px){.modal-bg{align-items:center}.modal{border-radius:16px}}
 
     /* MODAL */
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-end;justify-content:center}
@@ -148,7 +179,10 @@
       <p>โรงพยาบาลควนโดน จ.สตูล</p>
       <div class="hdr-date" id="hdrDate"></div>
     </div>
-    <div class="hdr-tag">ADMIN</div>
+    <div class="hdr-right">
+      <div class="hdr-tag">ADMIN</div>
+      <div class="win-badge" id="winBadge">📅 กำลังโหลดช่วงเปิดนัด…</div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -175,6 +209,11 @@
       <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
       <div class="stat"><div class="stat-n" id="stOnline" style="color:var(--blue)">-</div><div class="stat-l">จองออนไลน์</div></div>
       <div class="stat"><div class="stat-n" id="stWalkin" style="color:var(--orange)">-</div><div class="stat-l">Walk-in</div></div>
+      <div class="stat"><div class="stat-n" id="stAdvance" style="color:#4F46E5">-</div><div class="stat-l">นัดล่วงหน้า</div></div>
+    </div>
+    <div class="tool-row no-print">
+      <button class="tool-btn" onclick="openSeries()">📅 นัดเป็นชุด (มารดา / IMC)</button>
+      <button class="tool-btn" onclick="runSyncSlots()">🔄 อัปเดตช่องเวลาตามเวร</button>
     </div>
     <!-- Provider filter -->
     <div style="margin-bottom:12px;display:flex;gap:8px">
@@ -245,6 +284,60 @@
     </div>
   </div>
 
+  <!-- MODAL: นัดเป็นชุด (v3) -->
+  <div class="modal-bg hidden" id="srModal" onclick="if(event.target===this)closeSeries()">
+    <div class="modal wide" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeSeries()">&times;</button>
+      <div class="modal-t">📅 นัดเป็นชุด</div>
+
+      <div id="srStep1">
+        <div class="sr-groups">
+          <button class="sr-g on" data-g="postpartum" onclick="pickSeriesGroup('postpartum')">🤱 มารดาหลังคลอด<br><small>5 ครั้ง · วันทำการติดกัน</small></button>
+          <button class="sr-g" data-g="imc" onclick="pickSeriesGroup('imc')">🧑‍🦽 IMC<br><small>สัปดาห์ละครั้ง · 4 ครั้ง</small></button>
+          <button class="sr-g" data-g="other" onclick="pickSeriesGroup('other')">📋 อื่น ๆ<br><small>กำหนดเอง</small></button>
+        </div>
+        <div class="sr-grid">
+          <div class="fg"><label class="fl">ชื่อ-สกุลผู้ป่วย *</label><input type="text" class="fi" id="srName" placeholder="กรอกชื่อ-สกุล"></div>
+          <div class="fg"><label class="fl">HN</label><input type="text" class="fi" id="srHn"></div>
+          <div class="fg"><label class="fl">เบอร์โทร</label><input type="tel" class="fi" id="srPhone" placeholder="0xx-xxx-xxxx"></div>
+          <div class="fg"><label class="fl">สิทธิ์การรักษา</label><select class="fi" id="srIns"></select></div>
+          <div class="fg"><label class="fl">ประเภทบริการ *</label><select class="fi" id="srSvc" onchange="loadSeriesProviders()"></select></div>
+          <div class="fg"><label class="fl">ผู้รับบริการ (ใช้กรองผู้ให้บริการ)</label>
+            <select class="fi" id="srGender" onchange="loadSeriesProviders()">
+              <option value="female">หญิง</option><option value="male">ชาย</option><option value="child">เด็ก / ไม่ระบุ</option>
+            </select></div>
+          <div class="fg"><label class="fl">วันเริ่ม *</label><input type="date" class="fi" id="srStart" onchange="loadSeriesProviders()"></div>
+          <div class="fg"><label class="fl">ช่วงเวลา *</label><select class="fi" id="srSlot"></select></div>
+          <div class="fg"><label class="fl">ผู้ให้บริการที่ต้องการ</label><select class="fi" id="srProv"><option value="any">ไม่ระบุ (ใครว่างก็ได้)</option></select></div>
+          <div class="fg"><label class="fl">รูปแบบ · จำนวนครั้ง</label>
+            <div style="display:flex;gap:6px">
+              <select class="fi" id="srPattern" style="flex:2"><option value="daily">วันทำการติดกัน</option><option value="weekly">ทุก 7 วัน</option></select>
+              <input type="number" class="fi" id="srCount" min="1" max="12" value="5" style="flex:1">
+            </div></div>
+        </div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="srNote" placeholder="อาการ หรือข้อมูลเพิ่มเติม"></div>
+        <div id="srErr1" class="err hidden"></div>
+        <button class="btn btn-p" id="srPrevBtn" onclick="previewSeriesUI()">🔍 ตรวจสอบวันนัด</button>
+      </div>
+
+      <div id="srStep2" class="hidden">
+        <div id="srSummary" style="font-size:13px;color:var(--g600);margin-bottom:8px"></div>
+        <div class="tbl-wrap" style="overflow-x:auto"><table class="sr-tbl" id="srTable"></table></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;gap:8px;flex-wrap:wrap">
+          <button class="tool-btn" style="flex:0 0 auto" onclick="addSeriesRow()">➕ เพิ่มอีก 1 ครั้ง</button>
+          <div id="srHint" style="font-size:12px;color:var(--g500)"></div>
+        </div>
+        <div id="srErr2" class="err hidden"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" style="background:var(--g100);color:var(--g700);flex:1" onclick="backSeries()">← แก้ข้อมูล</button>
+          <button class="btn btn-p" style="flex:2" id="srBookBtn" onclick="confirmSeries()">✅ ยืนยันจองทั้งชุด</button>
+        </div>
+      </div>
+
+      <div id="srStep3" class="hidden"></div>
+    </div>
+  </div>
+
   <!-- MODAL: จองคิวด่วน -->
   <div class="modal-bg hidden" id="qbModal" onclick="closeQuickBook(event)">
     <div class="modal" onclick="event.stopPropagation()">
@@ -302,7 +395,7 @@ let selectedQueueDate = '';
 
 async function init() {
   const now = new Date();
-  todayStr = now.toISOString().slice(0, 10);
+  todayStr = localISO(now);  // v3: ใช้วันที่ตามเวลาเครื่อง (toISOString ก่อน 7 โมงเช้าจะได้วันของเมื่อวาน)
   selectedQueueDate = todayStr;
 
   // Set date picker to today
@@ -321,7 +414,35 @@ async function init() {
     if (svcR.success) services = svcR.services;
   } catch(e) { console.error(e); }
 
+  await loadBookingWindow();
   loadQueue();
+}
+
+// ============================================================
+// v3: ช่วงเปิดนัด (ป้ายมุมขวาบน)
+// ============================================================
+let winInfo = null;
+function localISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(iso,n){const[y,m,d]=iso.split('-').map(Number);return localISO(new Date(y,m-1,d+n))}
+function shortThai(iso){
+  const[y,m,d]=iso.split('-').map(Number);const dt=new Date(y,m-1,d);
+  const dn=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];const mn=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${dn[dt.getDay()]} ${d} ${mn[m-1]} ${String(y+543).slice(2)}`;
+}
+async function loadBookingWindow(){
+  const badge=document.getElementById('winBadge');
+  try{
+    const r=await apiGet('getBookingWindow');
+    if(!r.success)throw new Error(r.error);
+    winInfo=r;
+    let html=`📅 เปิดนัดถึง <b>${shortThai(r.max_date)}</b>`;
+    if(!r.schedule_until) html+=`<br><span class="warn">⚠️ ยังไม่มีตารางเวรล่วงหน้า</span>`;
+    else if(r.schedule_until<r.max_date) html+=`<br><span class="warn">⚠️ ตารางเวรมีถึง ${shortThai(r.schedule_until)}</span><br><small>ใส่เวรเพิ่มเพื่อนัดได้ครบ ${r.admin_days} วัน</small>`;
+    badge.innerHTML=html;
+    badge.title='หน้า admin นัดล่วงหน้าได้ '+r.admin_days+' วัน · หน้าเว็บจองของคนไข้เปิด 7 วัน';
+    const inp=document.getElementById('queueDate');
+    inp.min=addDays(r.today,-r.keep_days); inp.max=r.max_date;
+  }catch(e){ badge.textContent='📅 โหลดช่วงเปิดนัดไม่สำเร็จ'; }
 }
 
 function formatThaiDate(dateStr) {
@@ -343,9 +464,10 @@ function updateQueueDateLabel() {
 
 function changeQueueDate(offset) {
   const input = document.getElementById('queueDate');
-  const d = new Date(input.value);
-  d.setDate(d.getDate() + offset);
-  input.value = d.toISOString().slice(0, 10);
+  let next = addDays(input.value || todayStr, offset);
+  if (input.max && next > input.max) next = input.max;
+  if (input.min && next < input.min) next = input.min;
+  input.value = next;
   updateQueueDateLabel();
   loadQueue();
 }
@@ -365,6 +487,20 @@ async function loadQueue() {
   updateQueueDateLabel();
 
   const list = document.getElementById('queueList');
+
+  // v3: วันที่อยู่นอกช่วงที่ระบบเก็บ/เปิดนัด
+  if (winInfo) {
+    if (dateStr > winInfo.max_date) {
+      ['stTotal','stOnline','stWalkin','stAdvance'].forEach(id=>document.getElementById(id).textContent='-');
+      list.innerHTML = `<div class="date-note">📅 วันนี้เกินช่วงเปิดนัด<br>หน้า admin นัดล่วงหน้าได้ถึง <b>${shortThai(winInfo.max_date)}</b> (${winInfo.admin_days} วัน)</div>`;
+      return;
+    }
+    if (dateStr < addDays(winInfo.today, -winInfo.keep_days)) {
+      ['stTotal','stOnline','stWalkin','stAdvance'].forEach(id=>document.getElementById(id).textContent='-');
+      list.innerHTML = `<div class="date-note">🗂️ ข้อมูลนัดของวันนี้ถูกลบแล้ว<br>ระบบเก็บย้อนหลัง ${winInfo.keep_days} วัน · ดูได้จาก HosXP หรือตารางพิมพ์สำรอง</div>`;
+      return;
+    }
+  }
   list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
 
   try {
@@ -410,9 +546,11 @@ function renderQueue(bookings) {
   const total = bookings.length;
   const online = bookings.filter(b => b.booking_type === 'online' || b.booking_type === 'reschedule').length;
   const walkin = bookings.filter(b => b.booking_type === 'walk-in').length;
+  const advance = bookings.filter(b => b.booking_type === 'advance').length;
   document.getElementById('stTotal').textContent = total;
   document.getElementById('stOnline').textContent = online;
   document.getElementById('stWalkin').textContent = walkin;
+  document.getElementById('stAdvance').textContent = advance;
   document.getElementById('qBadge').textContent = total;
 
   if (!todayProviders || todayProviders.length === 0) {
@@ -476,6 +614,7 @@ function renderQueue(bookings) {
 
       if (booking) {
         const isWalkin = booking.booking_type === 'walk-in';
+        const isAdvance = booking.booking_type === 'advance';
         const ins = insMap[booking.insurance_type] || '';
         const svcStatus = booking.service_status || 'รอเรียก';
         const statusMap = {
@@ -484,9 +623,13 @@ function renderQueue(bookings) {
           'เสร็จแล้ว': {cls:'st-done', ic:'✅', next:'รอเรียก', btnTxt:'↺ รอ', btnBg:'#F3F4F6', btnCol:'#6B7280'},
         };
         const st = statusMap[svcStatus] || statusMap['รอเรียก'];
-        html += `<td class="td-slot ${isWalkin ? 'td-walkin' : 'td-booked'} ${st.cls}" onclick="viewBooking('${booking.booking_id}')">
+        const seriesChip = booking.series_label ? `<span class="slot-series">${booking.series_label}</span>` : '';
+        const lastWarn = booking.series_last
+          ? `<span class="slot-last">${/^IMC/.test(booking.series_label) ? '⚠️ ครั้งสุดท้าย – นัดเดือนถัดไป' : '⚠️ ครั้งสุดท้ายของชุด'}</span>` : '';
+        html += `<td class="td-slot ${isWalkin ? 'td-walkin' : (isAdvance ? 'td-advance' : 'td-booked')} ${st.cls}" onclick="viewBooking('${booking.booking_id}')">
           <span class="slot-name">${booking.patient_name || '-'}</span>
           <span class="slot-svc">${booking.service_name || ''}</span>
+          ${seriesChip}${lastWarn}
           <span class="slot-status">${st.ic} ${svcStatus}</span>
           <div class="slot-actions">
             <button class="slot-btn" style="background:${st.btnBg};color:${st.btnCol};font-weight:700" onclick="event.stopPropagation();cycleStatus('${booking.booking_id}','${st.next}')">${st.btnTxt}</button>
@@ -511,7 +654,7 @@ function renderQueue(bookings) {
 
   // สรุปจำนวน
   html += `<div style="font-size:12px;color:var(--g400);text-align:center;margin-top:8px">
-    🟢 จองออนไลน์ &nbsp; 🟠 Walk-in &nbsp; ⬜ ว่าง (กดเพื่อจอง) &nbsp; ▨ ไม่มีเวร
+    🟢 จองออนไลน์ &nbsp; 🟠 Walk-in &nbsp; 🟣 นัดล่วงหน้า &nbsp; ⬜ ว่าง (กดเพื่อจอง) &nbsp; ▨ ไม่มีเวร
   </div>`;
 
   list.innerHTML = html;
@@ -599,8 +742,15 @@ async function viewBooking(bid) {
     <div class="scr-row"><span class="scr-q">เวลา</span><div class="scr-a">${safeTime(b.time_start)} – ${safeTime(b.time_end)}</div></div>
     <div class="scr-row"><span class="scr-q">ผู้ให้บริการ</span><div class="scr-a">${b.provider_name||'-'}</div></div>
     <div class="scr-row"><span class="scr-q">บริการ</span><div class="scr-a">${b.service_name||'-'}</div></div>
-    <div class="scr-row"><span class="scr-q">ประเภทการจอง</span><div class="scr-a">${b.booking_type||'-'}</div></div>
-    <div class="scr-row"><span class="scr-q">สถานะ</span><div class="scr-a">${b.status||'-'}</div></div>
+    <div class="scr-row"><span class="scr-q">ประเภทการจอง</span><div class="scr-a">${({'online':'จองออนไลน์','walk-in':'Walk-in','advance':'นัดล่วงหน้า','reschedule':'เลื่อนนัด'})[b.booking_type]||b.booking_type||'-'}</div></div>
+    ${b.series_label?`<div class="scr-row"><span class="scr-q">นัดเป็นชุด</span><div class="scr-a">${b.series_label}${b.series_last?' · <span style="color:var(--red)">ครั้งสุดท้าย</span>':''}</div></div>`:''}
+    ${b.patient_phone?`<div class="scr-row"><span class="scr-q">เบอร์โทร</span><div class="scr-a">${b.patient_phone}</div></div>`:''}
+    <div class="scr-row"><span class="scr-q">สถานะ</span><div class="scr-a">${b.service_status||'รอเรียก'}</div></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="tool-btn" onclick="printAppointment('${b.booking_id}')">🖨️ พิมพ์ใบนัด</button>
+      ${b.series_id?`<button class="tool-btn" onclick="printSeriesById('${b.series_id}')">🖨️ พิมพ์ใบนัดทั้งชุด</button>`:''}
+      <button class="tool-btn" style="color:var(--red)" onclick="document.getElementById('modal').classList.add('hidden');cancelBooking('${b.booking_id}')">❌ ยกเลิกคิว</button>
+    </div>
   `;
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modal').classList.remove('hidden');
@@ -873,7 +1023,7 @@ async function submitQuickBook(){
       patient_phone: document.getElementById('qbPhone').value.trim(),
       insurance_type: document.getElementById('qbIns').value,
       notes: document.getElementById('qbNote').value.trim(),
-      booking_type: 'walk-in',
+      booking_type: qbCtx.dateStr === todayStr ? 'walk-in' : 'advance',
     });
     if(res.success){
       document.getElementById('qbModal').classList.add('hidden');
@@ -921,6 +1071,9 @@ function showToast(msg) {
 //   โหมด 'label' = สติกเกอร์ 57 x 38 มม. (มีกระดาษรองหลัง/มีช่องว่างระหว่างดวง)
 // ============================================================
 const SLIP_MODE_KEY = 'ttm_slip_mode';
+// ความยาวใบนัดแบบกระดาษม้วน (มม.) — ต้องตรงกับขนาดกระดาษ (Form) ที่ตั้งไว้ในไดรเวอร์ Xprinter
+// ถ้าเปลี่ยนเลขนี้ ต้องไปแก้ขนาด Form ใน Windows ให้ตรงกันด้วย
+const SLIP_ROLL_LEN_MM = 120;
 function getSlipMode() {
   try { return localStorage.getItem(SLIP_MODE_KEY) || 'roll'; } catch (e) { return 'roll'; }
 }
@@ -1024,26 +1177,25 @@ function openSlipWindow(b, dateStr, isTest) {
   } else {
     // ======== กระดาษม้วน 58 มม. (พิมพ์ได้กว้าง 48 มม.) ========
     css = baseCss + `
-      @page{size:58mm 150mm;margin:0} /* ความสูงจริงจะถูกคำนวณใหม่ตอนพิมพ์ */
-      html,body{width:58mm}
-      .slip{width:58mm;padding:1mm 5mm 0;${isTest ? 'outline:0.3mm solid #000;outline-offset:-0.3mm;' : ''}}
-      .in{width:48mm}
+      @page{size:58mm ${SLIP_ROLL_LEN_MM}mm;margin:0}
+      html,body{width:58mm;height:${SLIP_ROLL_LEN_MM}mm;overflow:hidden}
+      .slip{width:58mm;height:${SLIP_ROLL_LEN_MM}mm;overflow:hidden;padding:1mm 5mm 0;${isTest ? 'outline:0.3mm solid #000;outline-offset:-0.3mm;' : ''}}
+      .in{width:48mm;transform-origin:top center}
       .c{text-align:center}
       .h1{font-size:9pt;font-weight:700;line-height:1.3}
       .h2{font-size:8pt;line-height:1.3}
-      .ttl{font-size:13pt;font-weight:800;letter-spacing:.5px;margin:1mm 0 0.5mm}
-      .hr{border-top:0.35mm dashed #000;margin:1.5mm 0}
+      .ttl{font-size:12pt;font-weight:800;letter-spacing:.5px;margin:0.5mm 0 0}
+      .hr{border-top:0.35mm dashed #000;margin:1.2mm 0}
       .hr.s{border-top-style:solid}
       .dt{font-size:10.5pt;font-weight:700;line-height:1.3}
-      .tm{font-size:17pt;font-weight:800;line-height:1.15}
+      .tm{font-size:16pt;font-weight:800;line-height:1.15}
       table{width:100%;border-collapse:collapse}
       td{font-size:8.5pt;line-height:1.3;padding:0.4mm 0;vertical-align:top}
       td.l{width:17mm;padding-right:1mm;font-weight:500;white-space:nowrap}
       td.v{font-weight:700;word-break:break-word}
-      .qr{width:24mm;height:24mm;margin:1mm auto 0.5mm}
+      .qr{width:21mm;height:21mm;margin:0.5mm auto 0.3mm}
       .sm{font-size:7pt;line-height:1.3}
-      .note{border:0.35mm solid #000;border-radius:1mm;padding:1mm;font-size:8.5pt;font-weight:700;line-height:1.35;margin-top:1.5mm}
-      .tear{height:12mm} /* เผื่อระยะฉีกกระดาษ (หัวพิมพ์→ใบมีดฉีก) */
+      .note{border:0.35mm solid #000;border-radius:1mm;padding:0.8mm;font-size:8pt;font-weight:700;line-height:1.3;margin-top:1.2mm}
     `;
     html = `
       <div class="slip"><div class="in">
@@ -1066,7 +1218,6 @@ function openSlipWindow(b, dateStr, isTest) {
         <div class="c sm">สแกนเพื่อดู / ยกเลิกนัด<br>รหัสนัด ${e(b.booking_id)}</div>
         <div class="c note">กรุณามาก่อนเวลานัด 15 นาที<br>พร้อมบัตรประชาชน</div>
         <div class="c sm" style="margin-top:1.2mm">พิมพ์ ${e(printedAt)}</div>
-        <div class="tear"></div>
       </div></div>`;
   }
 
@@ -1082,13 +1233,13 @@ ${html}
   (function(){
     var mode = ${JSON.stringify(mode)};
     function go(){
-      // โหมดม้วน: ตั้งความยาวกระดาษ = ความยาวเนื้อหาจริง ไม่ให้เครื่องป้อนกระดาษเปล่าเกิน
+      // โหมดม้วน: ความยาวกระดาษคงที่ เว้นท้าย 12 มม. ไว้ฉีก
+      // ถ้าเนื้อหายาวเกิน (เช่น ชื่อยาวหลายบรรทัด) จะย่อทั้งใบลงให้พอดีอัตโนมัติ
       if (mode === 'roll') {
-        var h = document.querySelector('.slip').getBoundingClientRect().height;
-        var mm = Math.ceil(h * 25.4 / 96) + 1;
-        var st = document.createElement('style');
-        st.textContent = '@page{size:58mm ' + mm + 'mm;margin:0}';
-        document.head.appendChild(st);
+        var inner = document.querySelector('.in');
+        var avail = (${SLIP_ROLL_LEN_MM} - 1 - 12) * 96 / 25.4;
+        var h = inner.getBoundingClientRect().height;
+        if (h > avail) inner.style.transform = 'scale(' + (avail / h).toFixed(3) + ')';
       }
       setTimeout(function(){ window.print(); }, 200);
     }
@@ -1101,6 +1252,259 @@ ${html}
   })();
 <\/script>
 </body></html>`);
+  w.document.close();
+}
+
+// ============================================================
+// v3: 🔄 อัปเดตช่องเวลาตามตารางเวรล่าสุด (ใช้ตอนมีคนลา / เพิ่มเวร)
+// ============================================================
+async function runSyncSlots(){
+  if(!confirm('ระบบจะปรับช่องเวลา 30 วันข้างหน้าตามตารางเวรล่าสุด\n• คนที่ไม่อยู่เวร → ช่องว่างเปลี่ยนเป็น "ลา"\n• คนที่เพิ่มเวร → เพิ่มช่องเวลาให้\n• นัดที่จองไว้แล้วจะไม่ถูกลบ\n\nดำเนินการต่อ?'))return;
+  const title=document.getElementById('modalTitle'), body=document.getElementById('modalBody');
+  title.textContent='🔄 อัปเดตช่องเวลาตามเวร';
+  body.innerHTML='<div class="ld"><div class="sp"></div>กำลังอัปเดต...</div>';
+  document.getElementById('modal').classList.remove('hidden');
+  try{
+    const r=await apiPost({action:'syncSlots'});
+    if(!r.success){body.innerHTML=`<div class="err">${r.error}</div>`;return}
+    let html=`<div class="res-list">✅ อัปเดตแล้ว (ถึง ${shortThai(r.until)})<br>
+      • เพิ่มช่องเวลาใหม่ <b>${r.added}</b> ช่อง<br>
+      • เปลี่ยนเป็น "ลา" <b>${r.set_leave}</b> ช่อง<br>
+      • คืนช่องว่าง (ยกเลิกลา) <b>${r.restored}</b> ช่อง`;
+    if(r.conflicts.length){
+      html+=`<div style="margin-top:12px;color:var(--red);font-weight:700">⚠️ มีคนไข้ ${r.conflicts.length} รายนัดกับผู้ให้บริการที่ไม่อยู่เวรแล้ว — กรุณาโทรเลื่อนหรือเปลี่ยนผู้ให้บริการ</div>
+        <table><tr><th>วันที่</th><th>เวลา</th><th>ผู้ป่วย</th><th>โทร</th><th>ผู้ให้บริการเดิม</th></tr>`+
+        r.conflicts.map(c=>`<tr><td>${shortThai(c.date)}</td><td>${c.time_start}</td><td>${c.patient_name}</td><td>${c.patient_phone||'-'}</td><td>${c.provider_name}</td></tr>`).join('')+`</table>`;
+    } else html+=`<div style="margin-top:10px;color:var(--forest)">ไม่มีคนไข้ที่นัดกับผู้ให้บริการที่ลา</div>`;
+    body.innerHTML=html+'</div>';
+    loadBookingWindow(); loadQueue();
+  }catch(e){body.innerHTML=`<div class="err">เกิดข้อผิดพลาด: ${e.message}</div>`}
+}
+
+// ============================================================
+// v3: 📅 นัดเป็นชุด (มารดาหลังคลอด / IMC)
+// ============================================================
+const SLOT_LIST=[
+  {index:1,label:'09:00-10:00'},{index:2,label:'10:00-11:00'},{index:3,label:'11:00-12:00'},
+  {index:4,label:'13:30-14:30'},{index:5,label:'14:30-15:30'},
+  {index:6,label:'16:30-17:30'},{index:7,label:'17:30-18:30'},{index:8,label:'19:00-20:00'},
+];
+let srGroup='postpartum', srSessions=[], srCtx=null, srResult=null;
+
+function openSeries(){
+  document.getElementById('srIns').innerHTML=INS_LIST.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  document.getElementById('srSvc').innerHTML=services.map(s=>`<option value="${s.id}">${s.icon} ${s.name} (${s.duration})</option>`).join('');
+  document.getElementById('srSlot').innerHTML=SLOT_LIST.map(s=>`<option value="${s.index}">${s.label}</option>`).join('');
+  ['srName','srHn','srPhone','srNote'].forEach(id=>document.getElementById(id).value='');
+  const st=document.getElementById('srStart');
+  st.value=addDays(todayStr,1); st.min=todayStr; if(winInfo)st.max=winInfo.max_date;
+  pickSeriesGroup('postpartum');
+  showSeriesStep(1);
+  document.getElementById('srModal').classList.remove('hidden');
+}
+function closeSeries(){document.getElementById('srModal').classList.add('hidden')}
+function showSeriesStep(n){[1,2,3].forEach(i=>document.getElementById('srStep'+i).classList.toggle('hidden',i!==n))}
+function backSeries(){showSeriesStep(1)}
+
+function pickSeriesGroup(g){
+  srGroup=g;
+  document.querySelectorAll('.sr-g').forEach(e=>e.classList.toggle('on',e.dataset.g===g));
+  const svc=document.getElementById('srSvc');
+  if(g==='postpartum'){
+    if([...svc.options].some(o=>o.value==='postpartum'))svc.value='postpartum';
+    document.getElementById('srGender').value='female';
+    document.getElementById('srPattern').value='daily';
+    document.getElementById('srCount').value=5;
+  }else if(g==='imc'){
+    if(svc.value==='postpartum'&&[...svc.options].some(o=>o.value==='massage_1hr'))svc.value='massage_1hr';
+    document.getElementById('srPattern').value='weekly';
+    document.getElementById('srCount').value=4;
+  }
+  loadSeriesProviders();
+}
+
+async function loadSeriesProviders(){
+  const sel=document.getElementById('srProv');
+  const date=document.getElementById('srStart').value;
+  const keep=sel.value;
+  sel.innerHTML='<option value="any">ไม่ระบุ (ใครว่างก็ได้)</option>';
+  if(!date)return;
+  try{
+    const r=await apiGet('getScheduledProviders',{date,service_type:document.getElementById('srSvc').value,patient_gender:document.getElementById('srGender').value});
+    (r.providers||[]).forEach(p=>sel.innerHTML+=`<option value="${p.id}">${p.name}</option>`);
+    if([...sel.options].some(o=>o.value===keep))sel.value=keep;
+  }catch(e){}
+}
+
+function seriesCommon(){
+  return{
+    service_type:document.getElementById('srSvc').value,
+    patient_gender:document.getElementById('srGender').value,
+  };
+}
+
+async function previewSeriesUI(){
+  const err=document.getElementById('srErr1');
+  const name=document.getElementById('srName').value.trim();
+  if(!name){err.textContent='กรุณากรอกชื่อ-สกุล';err.classList.remove('hidden');return}
+  err.classList.add('hidden');
+  const btn=document.getElementById('srPrevBtn');btn.disabled=true;btn.textContent='⏳ กำลังตรวจสอบ...';
+  srCtx=Object.assign(seriesCommon(),{
+    pattern:document.getElementById('srPattern').value,
+    group:srGroup,
+  });
+  try{
+    const r=await apiPost(Object.assign({action:'previewSeries',
+      start_date:document.getElementById('srStart').value,
+      slot_index:Number(document.getElementById('srSlot').value),
+      provider_id:document.getElementById('srProv').value,
+      count:Number(document.getElementById('srCount').value)||1},srCtx));
+    if(!r.success)throw new Error(r.error);
+    srSessions=r.sessions;
+    const svcName=(services.find(s=>s.id===srCtx.service_type)||{}).name||'';
+    document.getElementById('srSummary').innerHTML=`👤 <b>${name}</b> · ${svcName} · ${srCtx.pattern==='weekly'?'ทุก 7 วัน':'วันทำการติดกัน'}<br>ตรวจแล้ว: แก้แถวที่เป็นสีแดงให้เรียบร้อย (เปลี่ยนวัน/เวลา/ผู้ให้บริการ หรือลบแถว) แล้วกดยืนยัน`;
+    renderSeriesTable();
+    showSeriesStep(2);
+  }catch(e){err.textContent='ตรวจสอบไม่สำเร็จ: '+e.message;err.classList.remove('hidden')}
+  btn.disabled=false;btn.textContent='🔍 ตรวจสอบวันนัด';
+}
+
+const SR_OK=['ok','alt'];
+function renderSeriesTable(){
+  const tbl=document.getElementById('srTable');
+  const total=srSessions.length;
+  let html='<tr><th>ครั้ง</th><th>วันที่</th><th>เวลาเริ่ม</th><th>ผู้ให้บริการ</th><th>ผลตรวจ</th><th></th></tr>';
+  srSessions.forEach((s,i)=>{
+    const cls=SR_OK.includes(s.status)?(s.status==='alt'?'alt':''):'bad';
+    const opts=(s.options||[]).map(o=>`<option value="${o.id}" ${o.id===s.provider_id?'selected':''}>${o.name}</option>`).join('');
+    html+=`<tr class="${cls}">
+      <td style="text-align:center;font-weight:700;white-space:nowrap">${i+1}/${total}</td>
+      <td><input type="date" class="fi" value="${s.date||''}" min="${todayStr}" ${winInfo?`max="${winInfo.max_date}"`:''} onchange="editSeriesRow(${i},'date',this.value)"></td>
+      <td><select class="fi" onchange="editSeriesRow(${i},'slot',this.value)">${SLOT_LIST.map(x=>`<option value="${x.index}" ${x.index===Number(s.slot_index)?'selected':''}>${x.label}</option>`).join('')}</select></td>
+      <td>${opts?`<select class="fi" onchange="editSeriesRow(${i},'prov',this.value)">${opts}</select>`:'<span style="color:var(--g400)">—</span>'}</td>
+      <td class="sr-st">${s.checking?'⏳ กำลังตรวจ...':(s.status_text||'')}</td>
+      <td><button class="sr-del" title="ลบครั้งนี้" onclick="removeSeriesRow(${i})">🗑</button></td>
+    </tr>`;
+  });
+  tbl.innerHTML=html;
+  const bad=srSessions.filter(s=>!SR_OK.includes(s.status)).length;
+  const btn=document.getElementById('srBookBtn');
+  btn.disabled=!total||bad>0||srSessions.some(s=>s.checking);
+  btn.textContent=bad?`⛔ ยังมี ${bad} ครั้งที่ต้องแก้`:`✅ ยืนยันจองทั้งชุด (${total} ครั้ง)`;
+  const needSched=srSessions.some(s=>s.status==='no_schedule');
+  document.getElementById('srHint').innerHTML=needSched?'⏳ วันที่ยังไม่มีตารางเวร: ลบแถวนั้นไปก่อน แล้วค่อยจองเพิ่มเมื่อใส่เวรแล้ว':'';
+}
+
+async function editSeriesRow(i,field,val){
+  const s=srSessions[i];
+  if(field==='prov'){
+    const o=(s.options||[]).find(x=>x.id===val);
+    s.provider_id=val; s.provider_name=o?o.name:''; s.status='ok'; s.status_text='✅ ว่าง';
+    renderSeriesTable(); return;
+  }
+  if(field==='date')s.date=val;
+  if(field==='slot')s.slot_index=Number(val);
+  s.checking=true; renderSeriesTable();
+  try{
+    const r=await apiPost(Object.assign({action:'checkSession',date:s.date,slot_index:s.slot_index,provider_id:s.provider_id||'any'},seriesCommon()));
+    Object.assign(s,r.success?r:{status:'invalid',status_text:'⛔ '+(r.error||'ตรวจไม่สำเร็จ')});
+  }catch(e){s.status='invalid';s.status_text='⛔ ตรวจไม่สำเร็จ'}
+  s.checking=false; renderSeriesTable();
+}
+function removeSeriesRow(i){srSessions.splice(i,1);renderSeriesTable()}
+function addSeriesRow(){
+  const last=srSessions[srSessions.length-1];
+  const date=last?addDays(last.date,srCtx&&srCtx.pattern==='weekly'?7:1):addDays(todayStr,1);
+  srSessions.push({date,slot_index:last?last.slot_index:1,provider_id:last?last.provider_id:'any',options:[],status:'invalid',status_text:''});
+  editSeriesRow(srSessions.length-1,'date',date);
+}
+
+async function confirmSeries(){
+  const err=document.getElementById('srErr2');err.classList.add('hidden');
+  const btn=document.getElementById('srBookBtn');btn.disabled=true;btn.textContent='⏳ กำลังจองทั้งชุด...';
+  try{
+    const r=await apiPost(Object.assign({action:'bookSeries',
+      group:srCtx.group,
+      patient_name:document.getElementById('srName').value.trim(),
+      patient_hn:document.getElementById('srHn').value.trim(),
+      patient_phone:document.getElementById('srPhone').value.trim(),
+      insurance_type:document.getElementById('srIns').value,
+      notes:document.getElementById('srNote').value.trim(),
+      sessions:srSessions.map(s=>({date:s.date,slot_index:s.slot_index,provider_id:s.provider_id}))},seriesCommon()));
+    if(!r.success){
+      let msg=r.error||'จองไม่สำเร็จ';
+      if(r.failed)msg+='<br>'+r.failed.map(f=>`ครั้งที่ ${f.no} (${f.date_thai}): ${f.status_text}`).join('<br>');
+      err.innerHTML=msg;err.classList.remove('hidden');renderSeriesTable();return;
+    }
+    srResult=r;
+    document.getElementById('srStep3').innerHTML=`<div class="res-list">
+      ✅ <b>จองครบ ${r.bookings.length} ครั้งแล้ว</b> — ${r.patient_name} · ${r.service_name}
+      <table><tr><th>ครั้ง</th><th>วันที่</th><th>เวลา</th><th>ผู้ให้บริการ</th></tr>
+      ${r.bookings.map(b=>`<tr><td>${b.series_label}</td><td>${shortThai(b.date)}</td><td>${b.time_start}–${b.time_end}</td><td>${b.provider_name}</td></tr>`).join('')}</table></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-p" style="flex:2" onclick="printSeriesSlip(srResult)">🖨️ พิมพ์ใบนัดรวม</button>
+        <button class="btn" style="flex:1;background:var(--g100);color:var(--g700)" onclick="closeSeries()">ปิด</button>
+      </div>`;
+    showSeriesStep(3);
+    showToast('✅ จองนัดเป็นชุดสำเร็จ');
+    loadQueue();
+  }catch(e){err.textContent='เกิดข้อผิดพลาด: '+e.message;err.classList.remove('hidden')}
+  if(!document.getElementById('srStep2').classList.contains('hidden'))renderSeriesTable();
+}
+
+async function printSeriesById(seriesId){
+  try{
+    const r=await apiGet('getSeries',{series_id:seriesId});
+    if(!r.success||!r.bookings.length){alert('ไม่พบนัดในชุดนี้ (ครั้งที่ผ่านไปแล้วถูกลบออกจากระบบ)');return}
+    const f=r.bookings[0];
+    printSeriesSlip({patient_name:f.patient_name,patient_hn:f.patient_hn,service_name:f.service_name,bookings:r.bookings});
+  }catch(e){alert('Error: '+e.message)}
+}
+
+// ใบนัดรวม (กระดาษม้วน 58 มม. — ระยะขอบ "ไม่มี" เหมือนใบนัดปกติ)
+function printSeriesSlip(d){
+  const e=escHtml, list=d.bookings||[];
+  const L=Math.max(110, 78 + list.length*9);
+  const printedAt=new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  const rows=list.map(b=>`<tr><td class="n">${e((b.series_label||'').replace(/^.*?(\d+\/\d+)$/,'$1'))}</td><td>${e(slipDateShort(b.date))}<div class="t">${e(safeTime(b.time_start))}–${e(safeTime(b.time_end))} · ${e(b.provider_name||'')}</div></td></tr>`).join('');
+  const w=window.open('','_blank','width=420,height=640');
+  if(!w){alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up สำหรับเว็บนี้');return}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ใบนัดรวม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@page{size:58mm ${L}mm;margin:0}
+html,body{width:58mm;background:#fff;color:#000}
+body{font-family:'Sarabun','Tahoma',sans-serif;font-weight:600}
+@media screen{body{background:#ddd;padding:12px;width:auto}.slip{background:#fff;margin:0 auto}}
+.slip{width:58mm;min-height:${L}mm;padding:1mm 5mm 12mm}
+.in{width:48mm}.c{text-align:center}
+.h1{font-size:9.5pt;font-weight:700;line-height:1.3}.h2{font-size:8pt}
+.ttl{font-size:12pt;font-weight:800;margin-top:.5mm}
+.hr{border-top:.35mm dashed #000;margin:1.2mm 0}
+.info{font-size:8.5pt;line-height:1.35}.info b{font-weight:800}
+table{width:100%;border-collapse:collapse}
+td{font-size:9pt;line-height:1.25;padding:.8mm 0;border-bottom:.2mm solid #000;vertical-align:top}
+td.n{width:9mm;font-weight:800}
+.t{font-size:7.5pt;font-weight:600}
+.note{border:.35mm solid #000;border-radius:1mm;padding:.8mm;font-size:8pt;font-weight:700;line-height:1.3;margin-top:1.5mm}
+.sm{font-size:7pt;margin-top:1mm}
+</style></head><body><div class="slip"><div class="in">
+<div class="c h1">คลินิกแพทย์แผนไทย<br>และแพทย์ทางเลือก</div>
+<div class="c h2">โรงพยาบาลควนโดน จ.สตูล</div>
+<div class="hr"></div>
+<div class="c ttl">ใบนัดหมาย (${list.length} ครั้ง)</div>
+<div class="info">ชื่อ <b>${e(d.patient_name||'-')}</b>${d.patient_hn?` · HN <b>${e(d.patient_hn)}</b>`:''}<br>บริการ <b>${e(d.service_name||'-')}</b></div>
+<div class="hr"></div>
+<table>${rows}</table>
+<div class="c note">กรุณามาก่อนเวลานัด 15 นาที<br>พร้อมบัตรประชาชน</div>
+<div class="c sm">พิมพ์ ${e(printedAt)}</div>
+</div></div>
+<script>
+window.onafterprint=function(){setTimeout(function(){window.close()},300)};
+window.onload=function(){var r=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+Promise.race([r,new Promise(function(x){setTimeout(x,3000)})]).then(function(){setTimeout(function(){window.print()},200)})};
+<\/script></body></html>`);
   w.document.close();
 }
 
