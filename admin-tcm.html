@@ -51,6 +51,10 @@
     .fl{display:block;font-size:14px;font-weight:600;margin-bottom:4px;color:var(--g700)}
     .legend{font-size:12px;color:var(--g400);text-align:center;margin-top:8px}
     .hidden{display:none!important}
+    .refresh-btn{width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
+    .refresh-btn.spin{animation:rspin 1s linear infinite}
+    @keyframes rspin{to{transform:rotate(360deg)}}
+    .upd-note{font-size:11px;color:var(--g400);text-align:center;margin:-8px 0 10px}
     /* v3 */
     .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
     .win-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 10px;font-size:12px;line-height:1.45;text-align:right;color:#fff}
@@ -107,8 +111,10 @@
       <input type="date" class="fi" id="qDate" onchange="updateDateLabel();loadQueue()" style="text-align:center;font-size:13px;padding:8px;font-weight:600;flex:1">
       <button onclick="changeDate(1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">→</button>
       <button onclick="goToday()" class="btn btn-p" style="font-size:11px;padding:8px 12px;white-space:nowrap">วันนี้</button>
+      <button class="refresh-btn" id="refreshBtn" title="โหลดคิวใหม่ (ไม่ต้องกด F5)" onclick="loadQueue({silent:true})">🔄</button>
     </div>
     <div style="text-align:center;font-size:13px;color:var(--g500);margin-bottom:12px" id="dateLabel"></div>
+    <div class="upd-note" id="updNote"></div>
     <div class="stats">
       <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
       <div class="stat"><div class="stat-n" id="stOnline" style="color:var(--pri)">-</div><div class="stat-l">จองออนไลน์</div></div>
@@ -216,9 +222,29 @@ async function init(){
   todayStr=localDateStr(new Date());
   document.getElementById('qDate').value=todayStr;
   updateDateLabel();
-  await loadBookingWindow();
+  // v3.1: โหลดพร้อมกัน (เดิมรอช่วงเปิดนัดก่อน แล้วค่อยโหลดคิว)
+  loadBookingWindow();
   loadQueue();
   loadFormOptions();
+  startAutoRefresh();
+}
+
+// ============ v3.1: จำข้อมูลที่ไม่ค่อยเปลี่ยน + โหลดคิวใหม่อัตโนมัติ ============
+function readCache(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch(e){return null}}
+function writeCache(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
+const AUTO_REFRESH_MS=60000;
+let queueLoading=false,queueReqId=0;
+function anyModalOpen(){return['dtModal','qbModal'].some(id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden')})}
+function startAutoRefresh(){
+  setInterval(()=>{
+    if(document.visibilityState!=='visible')return;
+    if(!document.getElementById('pQueue').classList.contains('on'))return;
+    if(anyModalOpen()||queueLoading)return;
+    loadQueue({silent:true});
+  },AUTO_REFRESH_MS);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&!anyModalOpen()&&!queueLoading)loadQueue({silent:true});
+  });
 }
 
 // ============ v3: ช่วงเปิดนัด 30 วัน + วันหยุด/แพทย์ลา ============
@@ -260,7 +286,8 @@ function changeDate(n){
 }
 function goToday(){document.getElementById('qDate').value=todayStr;updateDateLabel();loadQueue()}
 
-async function loadQueue(){
+async function loadQueue(opts){
+  const silent=!!(opts&&opts.silent);
   const dateStr=document.getElementById('qDate').value||todayStr;
   const box=document.getElementById('queueTable');
   if(winInfo){
@@ -268,13 +295,23 @@ async function loadQueue(){
     if(dateStr>winInfo.max_date){clear();box.innerHTML=`<div class="date-note">📅 วันนี้เกินช่วงเปิดนัด<br>หน้า admin นัดล่วงหน้าได้ถึง <b>${shortThai(winInfo.max_date)}</b> (${winInfo.admin_days} วัน)</div>`;return}
     if(dateStr<addDays(winInfo.today,-winInfo.keep_days)){clear();box.innerHTML=`<div class="date-note">🗂️ ข้อมูลนัดของวันนี้ถูกลบแล้ว<br>ระบบเก็บย้อนหลัง ${winInfo.keep_days} วัน · ดูได้จาก HosXP หรือตารางพิมพ์สำรอง</div>`;return}
   }
-  box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+  if(!silent||!box.querySelector('table'))box.innerHTML='<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+  const myReq=++queueReqId,btn=document.getElementById('refreshBtn');
+  queueLoading=true;if(btn)btn.classList.add('spin');
   try{
     const res=await apiGet('getBookings',{date:dateStr});
+    if(myReq!==queueReqId)return;
     if(!res.success){box.innerHTML='<div class="empty">❌ '+esc(res.error)+'</div>';return}
     allBookings=res.bookings||[];
     renderTable(allBookings);
-  }catch(e){box.innerHTML='<div class="empty">❌ '+esc(e.message)+'</div>'}
+    document.getElementById('updNote').textContent='อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · โหลดใหม่เองทุก 1 นาที';
+  }catch(e){
+    if(myReq!==queueReqId)return;
+    if(silent&&box.querySelector('table'))showToast('⚠️ โหลดคิวใหม่ไม่สำเร็จ จะลองใหม่อัตโนมัติ');
+    else box.innerHTML='<div class="empty">❌ '+esc(e.message)+' — กดปุ่ม 🔄 เพื่อลองใหม่</div>';
+  }finally{
+    if(myReq===queueReqId){queueLoading=false;if(btn)btn.classList.remove('spin')}
+  }
 }
 
 function renderTable(bookings){
@@ -381,10 +418,14 @@ async function cancelBk(bid){
 
 // ============ เพิ่มคิว (กด + ในตาราง) ============
 async function loadFormOptions(){
+  // v3.1: ใช้รายการที่จำไว้ในเครื่องทันที แล้วค่อยอัปเดตจากระบบ
+  const c=readCache('tcm_form_v1');
+  if(c){serviceList=c.s||[];insList=c.i||[]}
   try{
     const[svcR,insR]=await Promise.all([apiGet('getServices'),apiGet('getInsuranceTypes')]);
     if(svcR.success)serviceList=svcR.services||[];
     if(insR.success)insList=insR.insurance_types||[];
+    writeCache('tcm_form_v1',{s:serviceList,i:insList});
   }catch(e){console.error(e)}
 }
 

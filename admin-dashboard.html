@@ -130,6 +130,10 @@
     .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--g800);color:#fff;padding:10px 24px;border-radius:20px;font-size:13px;font-weight:600;z-index:200;animation:fadeUp .3s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
     .hidden{display:none!important}
+    .refresh-btn{width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
+    .refresh-btn.spin{animation:rspin 1s linear infinite}
+    @keyframes rspin{to{transform:rotate(360deg)}}
+    .upd-note{font-size:11px;color:var(--g400);text-align:center;margin:-8px 0 10px}
     /* v3 */
     .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
     .win-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:5px 10px;font-size:12px;line-height:1.45;text-align:right;max-width:240px}
@@ -202,8 +206,10 @@
       </div>
       <button onclick="changeQueueDate(1)" style="width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--g200);background:#fff;font-size:16px;cursor:pointer">→</button>
       <button onclick="goToday()" style="padding:8px 12px;border-radius:var(--rs);background:var(--pri);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">วันนี้</button>
+      <button class="refresh-btn" id="refreshBtn" title="โหลดคิวใหม่ (ไม่ต้องกด F5)" onclick="loadQueue({silent:true})">🔄</button>
     </div>
     <div style="text-align:center;font-size:13px;color:var(--g500);margin-bottom:12px" id="queueDateLabel"></div>
+    <div class="upd-note" id="updNote"></div>
 
     <div class="stats" id="statsRow">
       <div class="stat"><div class="stat-n" id="stTotal">-</div><div class="stat-l">คิวทั้งหมด</div></div>
@@ -408,14 +414,40 @@ async function init() {
   document.getElementById('hdrDate').textContent =
     `วัน${dn[now.getDay()]}ที่ ${now.getDate()} ${mn[now.getMonth()]} ${now.getFullYear()+543}`;
 
-  // Load services
-  try {
-    const svcR = await apiGet('getServiceTypes');
-    if (svcR.success) services = svcR.services;
-  } catch(e) { console.error(e); }
-
-  await loadBookingWindow();
+  // v3.1: โหลดทุกอย่างพร้อมกัน (เดิมรอทีละอย่าง) + จำรายการบริการไว้ในเครื่อง
+  const cached = readCache('ttm_services_v1');
+  if (cached) services = cached;
+  apiGet('getServiceTypes').then(r => {
+    if (r.success) { services = r.services; writeCache('ttm_services_v1', r.services); }
+  }).catch(e => console.error(e));
+  loadBookingWindow();
   loadQueue();
+  startAutoRefresh();
+}
+
+// ============================================================
+// v3.1: จำข้อมูลที่ไม่ค่อยเปลี่ยนไว้ในเครื่อง + โหลดคิวใหม่อัตโนมัติ
+// ============================================================
+function readCache(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch(e){return null}}
+function writeCache(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
+
+const AUTO_REFRESH_MS = 60000;   // โหลดคิวใหม่เองทุก 1 นาที
+let queueLoading = false, queueReqId = 0;
+function anyModalOpen(){
+  return ['modal','qbModal','srModal'].some(id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden')});
+}
+function startAutoRefresh(){
+  setInterval(()=>{
+    if (document.visibilityState !== 'visible') return;           // ไม่ได้เปิดดูหน้านี้อยู่
+    const q = document.getElementById('pQueue');
+    if (!q || !q.classList.contains('on')) return;                 // อยู่แท็บอื่น
+    if (anyModalOpen() || queueLoading) return;                    // กำลังกรอกฟอร์ม / กำลังโหลด
+    loadQueue({silent:true});
+  }, AUTO_REFRESH_MS);
+  // กลับมาที่หน้านี้หลังไปทำอย่างอื่น (เช่น HosXP) → โหลดใหม่ทันที
+  document.addEventListener('visibilitychange',()=>{
+    if (document.visibilityState==='visible' && !anyModalOpen() && !queueLoading) loadQueue({silent:true});
+  });
 }
 
 // ============================================================
@@ -481,7 +513,8 @@ function goToday() {
 // ============================================================
 // TAB: คิว (รองรับเลือกวัน)
 // ============================================================
-async function loadQueue() {
+async function loadQueue(opts) {
+  const silent = !!(opts && opts.silent);
   const dateStr = document.getElementById('queueDate').value || todayStr;
   selectedQueueDate = dateStr;
   updateQueueDateLabel();
@@ -501,28 +534,43 @@ async function loadQueue() {
       return;
     }
   }
-  list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+  // โหลดแบบเงียบ (ปุ่ม 🔄 / อัตโนมัติ): ไม่ล้างตารางเดิม แค่หมุนไอคอน
+  if (!silent || !list.querySelector('table')) list.innerHTML = '<div class="ld"><div class="sp"></div>กำลังโหลดคิว...</div>';
+  const myReq = ++queueReqId;
+  const btn = document.getElementById('refreshBtn');
+  queueLoading = true; if (btn) btn.classList.add('spin');
 
   try {
-    // Load bookings for selected date
-    const res = await apiGet('getBookings', { date: dateStr });
+    // v3.1: ขอคิว + ผู้ให้บริการพร้อมกัน (เดิมรอทีละอย่าง)
+    const [res, provR] = await Promise.all([
+      apiGet('getBookings', { date: dateStr }),
+      apiGet('getScheduledProviders', { date: dateStr, service_type: 'massage_1hr' }),
+    ]);
+    if (myReq !== queueReqId) return;   // ระหว่างรอ มีการเปลี่ยนวันไปแล้ว → ทิ้งผลเก่า
     if (!res.success) { list.innerHTML = '<div class="err">'+res.error+'</div>'; return; }
     allBookings = res.bookings || [];
 
-    // Load providers for selected date
-    const provR = await apiGet('getScheduledProviders', { date: dateStr, service_type: 'massage_1hr' });
     if (provR.success) {
       todayProviders = provR.providers;
       const filter = document.getElementById('provFilter');
+      const keep = filter.value;
       filter.innerHTML = '<option value="all">👥 ผู้ให้บริการทั้งหมด</option>';
       todayProviders.forEach(p => {
         filter.innerHTML += `<option value="${p.id}">${p.name}</option>`;
       });
+      if ([...filter.options].some(o => o.value === keep)) filter.value = keep;
     }
 
-    renderQueue(allBookings);
+    if (document.getElementById('provFilter').value !== 'all') filterQueue();
+    else renderQueue(allBookings);
+    const upd = document.getElementById('updNote');
+    if (upd) upd.textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' · โหลดใหม่เองทุก 1 นาที';
   } catch(e) {
-    list.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+'</div>';
+    if (myReq !== queueReqId) return;
+    if (silent && list.querySelector('table')) { showToast('⚠️ โหลดคิวใหม่ไม่สำเร็จ จะลองใหม่อัตโนมัติ'); }
+    else list.innerHTML = '<div class="err">เกิดข้อผิดพลาด: '+e.message+' — กดปุ่ม 🔄 เพื่อลองใหม่</div>';
+  } finally {
+    if (myReq === queueReqId) { queueLoading = false; if (btn) btn.classList.remove('spin'); }
   }
 }
 
